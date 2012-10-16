@@ -1,0 +1,7 @@
+nbproject/*
+output/*
+*.txt
+*.mf
+build.xml
+dist/*
+build/*
