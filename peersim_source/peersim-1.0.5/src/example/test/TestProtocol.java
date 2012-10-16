@@ -18,15 +18,13 @@
 
 package example.test;
 
+import java.util.*;
+import peersim.cdsim.CDState;
+import peersim.common.*;
 import peersim.config.Configuration;
 import peersim.config.FastConfig;
 import peersim.core.*;
-import peersim.common.*;
 import peersim.vector.SingleValueHolder;
-import peersim.cdsim.CDProtocol;
-import peersim.cdsim.CDState;
-import java.util.Iterator;
-import java.util.*;
 
 /**
  * <p>
