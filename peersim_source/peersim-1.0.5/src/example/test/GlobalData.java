@@ -14,6 +14,7 @@ import peersim.common.*;
 
 
 
+
 public class  GlobalData {
     public static final long node_count = Configuration.getInt("network.size");
     public static final int slot_count = Configuration.getInt("simulation.slots");
