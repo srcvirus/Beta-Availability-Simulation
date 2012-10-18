@@ -6,23 +6,23 @@
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
  */
-
 package peersim.common;
 
 import example.test.*;
-import java.io.PrintStream;
+import java.util.Iterator;
+import java.util.Vector;
 import peersim.cdsim.CDProtocol;
 import peersim.config.Configuration;
 import peersim.core.Node;
-//import util.NameList;
-import java.util.Iterator;
-import java.util.Vector;
 //import util.stat_item;
+
 /**
  *
  * @author Nill
  */
-public abstract class genericProtocol implements CDProtocol {
+public abstract class genericProtocol implements CDProtocol
+{
+
     protected Vector outReqQueue;
     protected Vector incomingQueue;
     protected Vector incomingReqQueue;
@@ -37,11 +37,14 @@ public abstract class genericProtocol implements CDProtocol {
     protected int nAdvertMsg = 0;
     protected int nJoinMsg = 0;
     protected int wait_count;
-    protected int deny_count=-1;
-    
-    /** Creates a new instance of genericProtocol */
-    public genericProtocol(String prefix) {
-        Global.linkableID = Configuration.getInt(prefix+".linkable");
+    protected int deny_count = -1;
+
+    /**
+     * Creates a new instance of genericProtocol
+     */
+    public genericProtocol(String prefix)
+    {
+        Global.linkableID = Configuration.getInt(prefix + ".linkable");
         outReqQueue = new Vector(10);
         incomingQueue = new Vector(10);
         incomingReqQueue = new Vector(10);
@@ -55,7 +58,9 @@ public abstract class genericProtocol implements CDProtocol {
         nQueryMsg = 0;
         nAdvertMsg = 0;
     }
-    public void queryCycleReset() {
+
+    public void queryCycleReset()
+    {
         outReqQueue.clear();
         incomingQueue.clear();
         incomingReqQueue.clear();
@@ -66,181 +71,221 @@ public abstract class genericProtocol implements CDProtocol {
         seenMsgs.clear();
     }
 
-    
-    public Object clone(){
-        try{
-	genericProtocol nw = (genericProtocol)super.clone();
-        nw.outReqQueue= new Vector(10);
-        nw.incomingQueue = new Vector(10);
-        nw.incomingReqQueue = new Vector(10);
-        nw.incomingReplyQueue = new Vector(10);
-        nw.incomingDenyQueue = new Vector(10);
-        nw.incominggroupFormQueue = new Vector(10);
-        nw.seenMsgs = new Vector(100);
-        nw.advDB = new Vector(10);
-        nw.incomingExploreQueue = new Vector(10);
-        nw.incomingExploreReplyQueue = new Vector(10);
-        nQueryMsg = 0;
-        nAdvertMsg = 0;
-        return nw;
-        }
-        catch(Exception e)
+    public Object clone()
+    {
+        try
         {
-
+            genericProtocol nw = (genericProtocol) super.clone();
+            nw.outReqQueue = new Vector(10);
+            nw.incomingQueue = new Vector(10);
+            nw.incomingReqQueue = new Vector(10);
+            nw.incomingReplyQueue = new Vector(10);
+            nw.incomingDenyQueue = new Vector(10);
+            nw.incominggroupFormQueue = new Vector(10);
+            nw.seenMsgs = new Vector(100);
+            nw.advDB = new Vector(10);
+            nw.incomingExploreQueue = new Vector(10);
+            nw.incomingExploreReplyQueue = new Vector(10);
+            nQueryMsg = 0;
+            nAdvertMsg = 0;
+            return nw;
+        }
+        catch (Exception e)
+        {
         }
         return null;
-	// do any data allocation here
+        // do any data allocation here
     }
-    
-   /*  public Vector findMatches(String strQuery) {
-        Vector res = new Vector(10);
-       for (Iterator i = advDB.iterator(); i.hasNext(); ) {
-            String adv = (String)i.next();
-            if (NameList.Names().isMatch(adv, strQuery))
-                res.add(adv);
-        }
-        return res;
-    }*/
+
+    /*  public Vector findMatches(String strQuery) {
+     Vector res = new Vector(10);
+     for (Iterator i = advDB.iterator(); i.hasNext(); ) {
+     String adv = (String)i.next();
+     if (NameList.Names().isMatch(adv, strQuery))
+     res.add(adv);
+     }
+     return res;
+     }*/
     // is used only for search messages; advertise/join are done asyncronously
-    public void sendMessage(genericMessage msg, SingleNode dest) {
+    public void sendMessage(genericMessage msg, SingleNode dest)
+    {
         if (seenMsgs.contains(new Integer(msg.getId())) || msg.isExpired())
-            return ;
+        {
+            return;
+        }
         incomingQueue.add(msg);
         seenMsgs.add(new Integer(msg.getId()));
 //        System.out.println("@"+(chord.crdNode.get(dest).getId()+" "+(chord.crdMessage)msg).toString());
     }
-    public void sendMessage(reqMessage msg, SingleNode dest) {
+
+    public void sendMessage(reqMessage msg, SingleNode dest)
+    {
         if (seenMsgs.contains(new Integer(msg.getId())) || msg.isExpired())
-            return ;
+        {
+            return;
+        }
         msg.setDest(dest);
         GlobalData.Req_counter++;
         incomingReqQueue.add(msg);
         seenMsgs.add(new Integer(msg.getId()));
     }
 
-   public void sendMessage(replyMessage msg, SingleNode dest) {
+    public void sendMessage(replyMessage msg, SingleNode dest)
+    {
         if (seenMsgs.contains(new Integer(msg.getId())) || msg.isExpired())
-            return ;
-    //    System.out.println("From Reply");
+        {
+            return;
+        }
+        //    System.out.println("From Reply");
         GlobalData.Reply_counter++;
         incomingReplyQueue.add(msg);
         seenMsgs.add(new Integer(msg.getId()));
     }
 
-      public void sendMessage(denyMessage msg, SingleNode dest) {
+    public void sendMessage(denyMessage msg, SingleNode dest)
+    {
         if (seenMsgs.contains(new Integer(msg.getId())) || msg.isExpired())
-            return ;
-    //    System.out.println("From Reply");
+        {
+            return;
+        }
+        //    System.out.println("From Reply");
         incomingDenyQueue.add(msg);
         seenMsgs.add(new Integer(msg.getId()));
     }
 
-     public void sendMessage(exploreMessage msg, SingleNode dest) {
+    public void sendMessage(exploreMessage msg, SingleNode dest)
+    {
         if (seenMsgs.contains(new Integer(msg.getId())) || msg.isExpired())
-            return ;
-    //    System.out.println("From Reply");
+        {
+            return;
+        }
+        //    System.out.println("From Reply");
         incomingExploreQueue.add(msg);
         seenMsgs.add(new Integer(msg.getId()));
     }
 
-   public void sendMessage(exploreReplyMessage msg, SingleNode dest) {
+    public void sendMessage(exploreReplyMessage msg, SingleNode dest)
+    {
         if (seenMsgs.contains(new Integer(msg.getId())) || msg.isExpired())
-            return ;
-    //    System.out.println("From Reply");
+        {
+            return;
+        }
+        //    System.out.println("From Reply");
         incomingExploreReplyQueue.add(msg);
         seenMsgs.add(new Integer(msg.getId()));
     }
 
-    public void sendMessage(groupFormMessage msg, SingleNode dest) {
+    public void sendMessage(groupFormMessage msg, SingleNode dest)
+    {
         if (seenMsgs.contains(new Integer(msg.getId())) || msg.isExpired())
-            return ;
-    //    System.out.println("From Reply");
+        {
+            return;
+        }
+        //    System.out.println("From Reply");
         incominggroupFormQueue.add(msg);
         seenMsgs.add(new Integer(msg.getId()));
     }
 
-    public denyMessage containDenyMessage( SingleNode s)
+    public denyMessage containDenyMessage(SingleNode s)
     {
-        Vector queue= new Vector(10) ;
-        queue=incomingDenyQueue;
+        Vector queue = new Vector(10);
+        queue = incomingDenyQueue;
         genericMessage g;
         SingleNode peer;
-        SingleNode leader=s;
-        if(s.getGrpFlag())
+        SingleNode leader = s;
+        if (s.getGrpFlag())
         {
-         leader = GlobalData.grouplist.get(s.getGrpID() - 1).leader;
+            leader = GlobalData.grouplist.get(s.getGrpID() - 1).leader;
         }
-        if(!incomingDenyQueue.isEmpty()){
-        for (Iterator i = queue.iterator(); i.hasNext(); )
+        if (!incomingDenyQueue.isEmpty())
         {
-             g= (genericMessage) i.next();
-             denyMessage gm = (denyMessage)g;
-             peer=gm.getSource();
-             if(s.getID()==peer.getID()||leader.getID() == peer.getID())
-                 return gm;
-        }
+            for (Iterator i = queue.iterator(); i.hasNext();)
+            {
+                g = (genericMessage) i.next();
+                denyMessage gm = (denyMessage) g;
+                peer = gm.getSource();
+                if (s.getID() == peer.getID() || leader.getID() == peer.getID())
+                {
+                    return gm;
+                }
+            }
         }
         return null;
     }
 
-      public reqMessage containReqMessage( SingleNode s)
+    public reqMessage containReqMessage(SingleNode s)
     {
-        Vector queue= new Vector(10) ;
-        queue=incomingReqQueue;
+        Vector queue = new Vector(10);
+        queue = incomingReqQueue;
         genericMessage g;
         SingleNode peer;
-        SingleNode leader=s;
-        if(s.getGrpFlag())
+        SingleNode leader = s;
+        if (s.getGrpFlag())
         {
-         leader = GlobalData.grouplist.get(s.getGrpID() - 1).leader;
+            leader = GlobalData.grouplist.get(s.getGrpID() - 1).leader;
         }
-        if(!incomingReqQueue.isEmpty()){
-        for (Iterator i = queue.iterator(); i.hasNext(); )
+        if (!incomingReqQueue.isEmpty())
         {
-             g= (genericMessage) i.next();
-             reqMessage gm = (reqMessage)g;
-             peer=gm.getSource();
-             if(s.getID()==peer.getID()||leader.getID() == peer.getID())
-                 return gm;
-        }
+            for (Iterator i = queue.iterator(); i.hasNext();)
+            {
+                g = (genericMessage) i.next();
+                reqMessage gm = (reqMessage) g;
+                peer = gm.getSource();
+                if (s.getID() == peer.getID() || leader.getID() == peer.getID())
+                {
+                    return gm;
+                }
+            }
         }
         return null;
     }
-
 
     public abstract boolean initiateQuery(genericQuery gq);
+
     public abstract void processMessages(Node node);
- //   public abstract void Advertise(Node nd, String advStr, stat_item si_visited_peer, stat_item si_replica);
- //   public abstract void Join(Node nd, stat_item si_join_overhead);
-    
-    public void nextCycle( Node node, int protocolID ) {
-        try {
-        if (!incomingQueue.isEmpty()) {
-            for (Iterator i = incomingQueue.iterator(); i.hasNext(); ) {
-                genericMessage gm = (genericMessage)i.next(); 
-                processMessages(node);
+    //   public abstract void Advertise(Node nd, String advStr, stat_item si_visited_peer, stat_item si_replica);
+    //   public abstract void Join(Node nd, stat_item si_join_overhead);
+
+    public void nextCycle(Node node, int protocolID)
+    {
+        try
+        {
+            if (!incomingQueue.isEmpty())
+            {
+                for (Iterator i = incomingQueue.iterator(); i.hasNext();)
+                {
+                    genericMessage gm = (genericMessage) i.next();
+                    processMessages(node);
+                }
+                incomingQueue.clear();
             }
-            incomingQueue.clear();
         }
-        } catch (Exception e) {
+        catch (Exception e)
+        {
             e.printStackTrace();
             System.exit(0);
         }
     }
 
-    public Vector getAdvDB() {
+    public Vector getAdvDB()
+    {
         return advDB;
     }
-    public Vector getReqMsg() {
+
+    public Vector getReqMsg()
+    {
         return incomingReqQueue;
     }
 
-   public Vector getoutReqMsg() {
+    public Vector getoutReqMsg()
+    {
         return outReqQueue;
     }
 
-    public boolean addAdvert(String advStr) {
-        if (!advDB.contains(advStr)) {
+    public boolean addAdvert(String advStr)
+    {
+        if (!advDB.contains(advStr))
+        {
             advDB.add(advStr);
             return true;
         }
@@ -254,17 +299,19 @@ public abstract class genericProtocol implements CDProtocol {
 //        nAdvertMsg++;
 //    }
 
-    public int getNQueryMsg() {
+    public int getNQueryMsg()
+    {
         return nQueryMsg;
     }
 
-    public int getNAdvertMsg() {
+    public int getNAdvertMsg()
+    {
         return nAdvertMsg;
     }
 
-    public int getNJoinMsg() {
+    public int getNJoinMsg()
+    {
         return nJoinMsg;
     }
-
 //    public abstract void printParams(PrintStream ps);
 }

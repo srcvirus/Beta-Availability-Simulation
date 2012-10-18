@@ -21,6 +21,7 @@ public class  GlobalData {
     public static final int wait_cycle = 10;
     public static final int grp_limit=Configuration.getInt("simulation.groupsize");
     public static final int varied_uptime=Configuration.getInt("simulation.uptime");
+    public static final int BETA = Configuration.getInt("simulation.beta");
     public static final int slot_cycle =10;
     public static final int deny_counter =3;
     public static long Req_counter =0;
