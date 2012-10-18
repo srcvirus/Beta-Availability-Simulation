@@ -424,7 +424,7 @@ public class TestProtocol extends genericProtocol
             int linkableID = FastConfig.getLinkable(protocolID);
             Linkable linkable = (Linkable) node.getProtocol(linkableID);
             SingleNode peer_to_grp = null;
-            List <PeerComparator> peersToGroup = new ArrayList <PeerComparator>();
+            List <PeerComparator> peersToGroup = new ArrayList <PeerComparator>();  //SRC: for beta-av..list of beta - f peers to send invitation
             double contribution;
             double max_contribution = 0.0;
             SingleNode self = (SingleNode) node;
@@ -433,7 +433,11 @@ public class TestProtocol extends genericProtocol
             int cycles = Configuration.getInt("simulation.cycles");
             boolean isrecv = true;
             boolean isreplygot = false;
-            boolean reqCheck = false;
+            
+            //reqCheck[i] checks the ith outgoing queue, whether the request has been server or not
+            boolean reqCheck[] = new boolean[GlobalData.BETA];
+            for(int i = 0; i < GlobalData.BETA; i++) reqCheck[i] = false;
+            
             genericProtocol gself = (genericProtocol) self.getProtocol(protocolID);
             //long noreply = -1;
             ArrayList <Long> noreply = new ArrayList<Long>();
@@ -532,7 +536,7 @@ public class TestProtocol extends genericProtocol
                                 
                                 if(gotdm != null || gotrm != null)
                                 {
-                                    reqCheck = true;    //needs to be modified
+                                    reqCheck[i] = true;    
                                     outReqQueue[i].clear();
                                     wait_count[i] = 0;
                                 }
@@ -559,6 +563,8 @@ public class TestProtocol extends genericProtocol
                 {
                     int known_index = -1;
                     boolean allOutReqQueueEmpty = true;
+                    boolean allReqCheck = true;
+                    
                     for(int i = 0; i < GlobalData.BETA; i++)
                     {
                         if(!outReqQueue[i].isEmpty())
@@ -568,7 +574,16 @@ public class TestProtocol extends genericProtocol
                         }
                     }
                     
-                    if (allOutReqQueueEmpty || reqCheck == true)    //do something about reqCheck
+                    for(int i = 0; i < GlobalData.BETA; i++)
+                    {
+                        if(!reqCheck[i])
+                        {
+                            allReqCheck = false;
+                            break;
+                        }
+                    }
+                    
+                    if (allOutReqQueueEmpty || allReqCheck)    //do something about reqCheck
                     {
                         boolean all_denied = false;
                         boolean one_got = false;
@@ -683,7 +698,7 @@ public class TestProtocol extends genericProtocol
                             
                             genericProtocol gp;
                             
-                            for(int i = 0; i < nPeersToInvite; i++)
+                            for(int i = 0; i < Math.min(nPeersToInvite, peersToGroup.size()); i++)
                             {
                                 SingleNode peerToInvite = peersToGroup.get(i).getPeer();
                                 SingleNode leader = peerToInvite;
@@ -782,6 +797,9 @@ public class TestProtocol extends genericProtocol
         int selfGroupId = self.grp_id;
         long selfAvPattern = self.pattern;
         long complementPattern = GlobalData.golayCode.GetPartialComplementPattern(selfAvPattern);
+        
+        if(GlobalData.grouplist.size() <= selfGroupId) return ret;
+        
         ArrayList <SingleNode> selfGroupMembers = GlobalData.grouplist.get(selfGroupId).memberlist;
         
         Golay24CodeWord sourceCodeWord = new Golay24CodeWord(complementPattern);

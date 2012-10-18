@@ -23,7 +23,8 @@ import peersim.core.Node;
 public abstract class genericProtocol implements CDProtocol
 {
 
-    protected Vector outReqQueue;
+    //protected Vector outReqQueue;
+    protected Vector[] outReqQueue;
     protected Vector incomingQueue;
     protected Vector incomingReqQueue;
     protected Vector incomingReplyQueue;
@@ -36,7 +37,7 @@ public abstract class genericProtocol implements CDProtocol
     protected int nQueryMsg = 0;
     protected int nAdvertMsg = 0;
     protected int nJoinMsg = 0;
-    protected int wait_count;
+    protected int[] wait_count;
     protected int deny_count = -1;
 
     /**
@@ -45,7 +46,9 @@ public abstract class genericProtocol implements CDProtocol
     public genericProtocol(String prefix)
     {
         Global.linkableID = Configuration.getInt(prefix + ".linkable");
-        outReqQueue = new Vector(10);
+        outReqQueue = new Vector[GlobalData.BETA];
+        wait_count = new int[GlobalData.BETA];
+        for(int i = 0; i < GlobalData.BETA; i++) outReqQueue[i] = new Vector(10);
         incomingQueue = new Vector(10);
         incomingReqQueue = new Vector(10);
         incomingReplyQueue = new Vector(10);
@@ -61,7 +64,8 @@ public abstract class genericProtocol implements CDProtocol
 
     public void queryCycleReset()
     {
-        outReqQueue.clear();
+        for(int i = 0; i < GlobalData.BETA; i++) outReqQueue[i].clear();
+        //outReqQueue.clear();
         incomingQueue.clear();
         incomingReqQueue.clear();
         incomingReplyQueue.clear();
@@ -76,7 +80,9 @@ public abstract class genericProtocol implements CDProtocol
         try
         {
             genericProtocol nw = (genericProtocol) super.clone();
-            nw.outReqQueue = new Vector(10);
+            nw.outReqQueue = new Vector[GlobalData.BETA];
+            for(int i = 0; i < GlobalData.BETA; i++) nw.outReqQueue[i] = new Vector(10);
+            //nw.outReqQueue = new Vector(10);
             nw.incomingQueue = new Vector(10);
             nw.incomingReqQueue = new Vector(10);
             nw.incomingReplyQueue = new Vector(10);
@@ -277,10 +283,15 @@ public abstract class genericProtocol implements CDProtocol
         return incomingReqQueue;
     }
 
-    public Vector getoutReqMsg()
+    public Vector[] getoutReqMsg()
     {
         return outReqQueue;
     }
+    
+    /*public Vector getoutReqMsg()
+    {
+        return outReqQueue;
+    }*/
 
     public boolean addAdvert(String advStr)
     {

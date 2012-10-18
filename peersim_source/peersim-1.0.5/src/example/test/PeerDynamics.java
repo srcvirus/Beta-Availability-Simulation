@@ -74,22 +74,15 @@ public class PeerDynamics implements Control
             TestProtocol tp = (TestProtocol) gp;
             int cycle = CDState.getCycle();
             incomingReqQueue = gp.getReqMsg();
-            if (self.getID() == 0 && cycle == 4)
-            {
-                System.out.println();
-            }
+
             if (self.group_processing == true)
             {
                 tp.sendReqDenile(protocolID, self);
                 incomingReqQueue.clear();
                 continue;
             }
-            outReqQueue = gp.getoutReqMsg();
+
             reqMessage sentrm = null;
-            if (!outReqQueue.isEmpty())
-            {
-                sentrm = (reqMessage) outReqQueue.get(0);
-            }
             if (!incomingReqQueue.isEmpty())
             {
                 genericMessage g;
@@ -98,15 +91,28 @@ public class PeerDynamics implements Control
                     g = (genericMessage) i.next();
                     reqMessage gm = (reqMessage) g;
                     peer = gm.src;
-                    //     System.out.println("REQ is: "+ gm.getId()+"from "+gm.src.getID());
                     int new_size = peer.grp_size + self.grp_size;
-                    //     contribution= algo.contributionCalc(self.slot,gm.src_slot,new_size);
                     contribution = algo.contributionCalc(self, gm.src);
-                    if (sentrm != null && sentrm.contribution > contribution)
+                    for (int l = 0; l < GlobalData.BETA; l++)
                     {
-                        should_wait = true;
+                        outReqQueue = gp.getoutReqMsg()[l];
+                        sentrm = null;
+                        if (!outReqQueue.isEmpty())
+                        {
+                            sentrm = (reqMessage) outReqQueue.get(0);
+                        }
+                        if (sentrm != null && sentrm.contribution > contribution)
+                        {
+                            should_wait = true;
+                            break;
+                        }
+                    }
+
+                    if (should_wait)
+                    {
                         continue;
                     }
+
                     should_wait = false;
                     if (new_size > GlobalData.grp_limit)
                     {
@@ -200,7 +206,10 @@ public class PeerDynamics implements Control
                         down_grps++;
                     }
                     TestProtocol gself = (TestProtocol) s.getProtocol(protocolID);
-                    gself.getoutReqMsg().clear();
+                    for (int l = 0; l < GlobalData.BETA; l++)
+                    {
+                        gself.getoutReqMsg()[l].clear();
+                    }
                     s.setFailState(Fallible.DOWN);
                     down++;
                 }
