@@ -63,26 +63,31 @@ class PeerComparator implements Comparable
 {
     private SingleNode peer;
     private double contribution;
+    private int knownIndex;
     
     public PeerComparator()
     {
         super();
         this.peer = null;
         this.contribution = 0.0;
+        this.knownIndex = -1;
     }
 
-    public PeerComparator(SingleNode peer, double contribution)
+    public PeerComparator(SingleNode peer, double contribution, int knownIndex)
     {
         super();
         this.peer = peer;
         this.contribution = contribution;
+        this.knownIndex = knownIndex;
     }
     
     SingleNode getPeer(){ return this.peer; }
     void setPeer(SingleNode peer){ this.peer = peer; }
     double getContribution(){ return this.contribution; }
     void setContribution(double contribution){ this.contribution = contribution; }
-
+    int getKnownIndex(){ return this.knownIndex; }
+    void setKnownIndex(int index){ this.knownIndex = index; }
+    
     public int compareTo(Object o)
     {
         PeerComparator p2 = (PeerComparator)o;
@@ -430,8 +435,9 @@ public class TestProtocol extends genericProtocol
             boolean isreplygot = false;
             boolean reqCheck = false;
             genericProtocol gself = (genericProtocol) self.getProtocol(protocolID);
-            long noreply = -1;
-
+            //long noreply = -1;
+            ArrayList <Long> noreply = new ArrayList<Long>();
+            
             if (self.explored == false && (self.grp_flag == false || GlobalData.grouplist.get(self.grp_id - 1).leader.getID() == self.getID()))
             {
                 if (self.explore_cycle == 2 && self.grp_size <= GlobalData.grp_limit)
@@ -451,7 +457,8 @@ public class TestProtocol extends genericProtocol
             {
                 sendReqDenile(protocolID, self);
                 incominggroupFormQueue.clear();
-                outReqQueue.clear();
+                for(int i = 0; i < GlobalData.BETA; i++) outReqQueue[i].clear();
+                //outReqQueue.clear();
                 incomingReqQueue.clear();
                 incomingReplyQueue.clear();
                 incomingDenyQueue.clear();
@@ -483,14 +490,16 @@ public class TestProtocol extends genericProtocol
                             isreplygot = true;
                             sendReqDenile(protocolID, self, gm.src);
                             deny_count = -1;
-                            wait_count = 0;
+                            for(int l = 0; l < GlobalData.BETA; l++) wait_count[l] = 0; //wait_count = 0;
                             break;
                         }
-                        outReqQueue.clear();
+                        for(int i = 0; i < GlobalData.BETA; i++)
+                            outReqQueue[i].clear();
+                        //outReqQueue.clear();
                         incomingReqQueue.clear();
                         incomingReplyQueue.clear();
                     }
-                    else if (!outReqQueue.isEmpty())
+                    /*else if (!outReqQueue.isEmpty())
                     {
                         reqMessage sentrm = (reqMessage) outReqQueue.get(0);
                         denyMessage gotdm = gself.containDenyMessage(sentrm.dest);
@@ -510,7 +519,34 @@ public class TestProtocol extends genericProtocol
                                 outReqQueue.clear();
                             }
                         }
-
+                    }*/
+                    else
+                    {
+                        for(int i = 0; i < GlobalData.BETA; i++)
+                        {
+                            if(!outReqQueue[i].isEmpty())
+                            {
+                                reqMessage sentrm = (reqMessage) outReqQueue[i].get(0);
+                                denyMessage gotdm = gself.containDenyMessage(sentrm.dest);
+                                reqMessage gotrm = gself.containReqMessage(sentrm.dest);
+                                
+                                if(gotdm != null || gotrm != null)
+                                {
+                                    reqCheck = true;    //needs to be modified
+                                    outReqQueue[i].clear();
+                                    wait_count[i] = 0;
+                                }
+                                else
+                                {
+                                    wait_count[i]--;
+                                    if(wait_count[i] == 0)
+                                    {
+                                        noreply.add(new Long(sentrm.dest.getID()));
+                                        outReqQueue[i].clear();
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 catch (Exception e)
@@ -522,17 +558,42 @@ public class TestProtocol extends genericProtocol
                 if (isreplygot == false)
                 {
                     int known_index = -1;
-                    if (outReqQueue.isEmpty() || reqCheck == true)
+                    boolean allOutReqQueueEmpty = true;
+                    for(int i = 0; i < GlobalData.BETA; i++)
+                    {
+                        if(!outReqQueue[i].isEmpty())
+                        {
+                            allOutReqQueueEmpty = false;
+                            break;
+                        }
+                    }
+                    
+                    if (allOutReqQueueEmpty || reqCheck == true)    //do something about reqCheck
                     {
                         boolean all_denied = false;
                         boolean one_got = false;
                         for (int i = (self.knownList.size() - 1); i >= 0; i--)
                         {
                             peer = (SingleNode) self.knownList.get(i).node;
-                            if (peer.getID() == noreply)
+                            int j;
+                            for(j = 0; j < noreply.size(); j++)
+                            {
+                                if(peer.getID() == noreply.get(j).longValue())
+                                {
+                                    break;
+                                }
+                            }
+                            
+                            if(j < noreply.size())
                             {
                                 continue;
                             }
+                            
+                            /*if (peer.getID() == noreply)
+                            {
+                                continue;
+                            }*/
+                            
                             denyMessage dm = gself.containDenyMessage(peer);
                             if (dm != null)
                             {
@@ -587,15 +648,16 @@ public class TestProtocol extends genericProtocol
                             }
                             //      contribution= algo.contributionCalc(self.slot,s,new_grp_size);
                             contribution = algo.contributionCalc(self, peer);
-                            peersToGroup.add(new PeerComparator(peer, contribution));
+                            peersToGroup.add(new PeerComparator(peer, contribution, i));
                             
-                            if ((contribution - max_contribution) > 0.001)
+                            //Not required any more...for beta availability we do not need to find out the peer with max contribution
+                            /*if ((contribution - max_contribution) > 0.001)
                             {
                                 max_contribution = contribution;
                                 peer_to_grp = peer;
                                 isrecv = true;
                                 known_index = i;
-                            }
+                            }*/
                         }
                         if (all_denied == true)
                         {
@@ -629,8 +691,7 @@ public class TestProtocol extends genericProtocol
                                     leader = GlobalData.grouplist.get(peerToInvite.grp_id - 1).leader;
                                 gp = (genericProtocol) leader.getProtocol(protocolID);
                                 
-                                //set sent_flag of known_index to true
-                                
+                                self.knownList.get(peersToGroup.get(i).getKnownIndex()).sent_flag = true;
                                 reqMessage gotrm = gself.containReqMessage(leader);
                                 reqMessage fm = null;
                                 
@@ -642,11 +703,14 @@ public class TestProtocol extends genericProtocol
                                 gp.sendMessage(fm, leader);
                                 
                                 //add fm to the ith outReq queue
+                                outReqQueue[i].add(fm);
                                 //update ith wait count
+                                wait_count[i] = GlobalData.wait_cycle;
                             }
                         }
                         
-                        if (peer_to_grp != null)
+                        //SRC: not required any more for beta availability
+                        /*if (peer_to_grp != null)
                         {
                             genericProtocol gp;
                             SingleNode leader = peer_to_grp;
@@ -674,7 +738,7 @@ public class TestProtocol extends genericProtocol
                             {
                                 sendReqDenile(protocolID, self, leader);
                             }
-                        }
+                        }*/
                     }
                 }
                 incomingDenyQueue.clear();
