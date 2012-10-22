@@ -36,7 +36,6 @@ import peersim.vector.SingleValueHolder;
  */
 class ConComparator implements Comparator
 {
-
     public int compare(Object no1, Object no2)
     {
 
@@ -60,74 +59,7 @@ class ConComparator implements Comparator
     }
 }
 
-class PeerComparator implements Comparable
-{
 
-    private SingleNode peer;
-    private double contribution;
-    private int knownIndex;
-
-    public PeerComparator()
-    {
-        super();
-        this.peer = null;
-        this.contribution = 0.0;
-        this.knownIndex = -1;
-    }
-
-    public PeerComparator(SingleNode peer, double contribution, int knownIndex)
-    {
-        super();
-        this.peer = peer;
-        this.contribution = contribution;
-        this.knownIndex = knownIndex;
-    }
-
-    SingleNode getPeer()
-    {
-        return this.peer;
-    }
-
-    void setPeer(SingleNode peer)
-    {
-        this.peer = peer;
-    }
-
-    double getContribution()
-    {
-        return this.contribution;
-    }
-
-    void setContribution(double contribution)
-    {
-        this.contribution = contribution;
-    }
-
-    int getKnownIndex()
-    {
-        return this.knownIndex;
-    }
-
-    void setKnownIndex(int index)
-    {
-        this.knownIndex = index;
-    }
-
-    public int compareTo(Object o)
-    {
-        PeerComparator p2 = (PeerComparator) o;
-
-        if (this.contribution < p2.contribution)
-        {
-            return 1;
-        }
-        else if (this.contribution > p2.contribution)
-        {
-            return -1;
-        }
-        return 0;
-    }
-}
 
 public class TestProtocol extends genericProtocol
 {
@@ -205,6 +137,40 @@ public class TestProtocol extends genericProtocol
         //      incomingDenyQueue.clear();
     }
 
+    public void sendReqDenile(int protocolID, SingleNode self, Vector <SingleNode> peersToGroup)
+    {
+        SingleNode peer;
+        genericProtocol gp;
+        if (!incomingReqQueue.isEmpty())
+        {
+            genericMessage g;
+            for (Iterator i = incomingReqQueue.iterator(); i.hasNext();)
+            {
+                g = (genericMessage) i.next();
+                reqMessage gm = (reqMessage) g;
+                peer = gm.src;
+                boolean skip = false;
+                for(int j = 0; j < peersToGroup.size(); j++)
+                {
+                    if(peersToGroup.get(j).getID() == peer.getID())
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+                
+                if(!skip)
+                {
+                    gp = (genericProtocol) peer.getProtocol(protocolID);
+                    denyMessage dm = new denyMessage(genericMessage.MSG_DENY, gm.dest, self.slot, self.grp_size);
+                    gp.sendMessage(dm, peer);
+                    //        System.out.println("Sending mes "+ dm.getId()+"To "+peer.getID()+" Type "+dm.toString());
+                }
+            }
+        }
+        //      incomingDenyQueue.clear();
+    }
+    
     public void sendReqDenile(int protocolID, SingleNode self)
     {
         SingleNode peer;
@@ -449,7 +415,7 @@ public class TestProtocol extends genericProtocol
         {
             if (cycle == 3 && node.getID() == 334)
             {
-                System.out.println("DEBUG: Entering Debug Mode..");
+                //System.out.println("DEBUG: Entering Debug Mode..");
             }
             int linkableID = FastConfig.getLinkable(protocolID);
             Linkable linkable = (Linkable) node.getProtocol(linkableID);
@@ -481,12 +447,12 @@ public class TestProtocol extends genericProtocol
                 {
                     if (self.getID() == 334)
                     {
-                        System.out.println("DEBUG");
+                        //System.out.println("DEBUG");
                     }
                     exploration(self, linkableID, protocolID);
                     if(self.knownList.size() < GlobalData.BETA)
                     {
-                        System.out.println("DEBUG");
+                        //System.out.println("DEBUG");
                     }
                     self.explored = true;
                 }
@@ -638,7 +604,7 @@ public class TestProtocol extends genericProtocol
                         boolean one_got = false;
                         if(cycle == 5 && node.getID() == 13)
                         {
-                            System.out.println("DEBUG");
+                            //System.out.println("DEBUG");
                         }
                         
                         for (int i = (self.knownList.size() - 1); i >= 0; i--)
@@ -747,9 +713,11 @@ public class TestProtocol extends genericProtocol
                         if (!peersToGroup.isEmpty())
                         {
                             Collections.sort(peersToGroup);
-                            int f = getOnlinePeerCountOfNextSlots(self);
+                            //int f = getOnlinePeerCountOfNextSlots(self);
+                            int f = 0;
                             int nPeersToInvite = GlobalData.BETA - f;
-
+                            
+                            
                             genericProtocol gp;
 
                             if (nPeersToInvite > peersToGroup.size())

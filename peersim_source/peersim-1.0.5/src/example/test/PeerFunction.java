@@ -34,14 +34,13 @@ package example.test;
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  */
-import peersim.config.*;
-import peersim.core.*;
-import peersim.vector.*;
-import peersim.util.IncrementalStats;
-import peersim.cdsim.CDState;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import peersim.cdsim.CDState;
+import peersim.config.*;
+import peersim.core.*;
+import peersim.util.IncrementalStats;
 
 /**
  * Print statistics for an average aggregation computation. Statistics printed
@@ -52,10 +51,6 @@ import java.util.Collections;
  */
 public class PeerFunction implements Control
 {
-
-    // /////////////////////////////////////////////////////////////////////
-    // Constants
-    // /////////////////////////////////////////////////////////////////////
     /**
      * Config parameter that determines the accuracy for standard deviation
      * before stopping the simulation. If not defined, a negative value is used
@@ -712,7 +707,8 @@ public class PeerFunction implements Control
 
                     try
                     {
-                        BufferedWriter sizeWriter = new BufferedWriter(new FileWriter(new File("output\\groupSize.txt")));
+                        String groupDataFile = "output\\groupSize_" + Network.size() + "_" + GlobalData.BETA+".txt";
+                        BufferedWriter sizeWriter = new BufferedWriter(new FileWriter(new File(groupDataFile)));
                         sizeWriter.write(meanGroupSize + " " + medianGroupSize + " " + minGroupSize + " " + maxGroupSize);
                         sizeWriter.newLine();
                         for (int i = minGroupSize; i <= maxGroupSize; i++)

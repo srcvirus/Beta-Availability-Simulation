@@ -6,6 +6,7 @@ package example.test;
 
 import peersim.common.*;
 import java.util.*;
+import org.apache.commons.math.util.MathUtils;
 
 /**
  *
@@ -232,16 +233,91 @@ public class gAlgoJP extends gAlgo
      return utility;
      }
      */
+//    public double contributionCalc(SingleNode old, SingleNode nnew)
+//    {
+//
+//        double[] pold = old.slot;
+//        double[] pnew = nnew.slot;
+//        int new_grp_size = old.grp_size + nnew.grp_size;
+//        int old_improve = new_grp_size - old.grp_size;
+//        int new_improve = new_grp_size - nnew.grp_size;
+//
+//        //    int new_grp_size=1;
+//        int slot_count = GlobalData.slot_count;
+//        double[] grp = new double[slot_count];
+//        double jp = 0.0;
+//        double _old = 0.0;
+//        double _new = 0.0;
+//        double sum_jp = 0.0;
+//        double sum_old = 0.0;
+//        double sum_new = 0.0;
+//        int count = 0;
+//        long pattern = old.pattern;
+//        for (int i = slot_count - 1; i >= 0; i--, pattern = pattern >> 1)
+//        {
+//            //    if((pattern & 1)==1)
+//            //         continue;
+//            _old = 1 - pold[i];
+//            _new = 1 - pnew[i];
+//            jp = 1 - _old * _new;
+//            grp[i] = jp;
+//            sum_old += pold[i];
+//            sum_new += pnew[i];
+//            sum_jp += jp;
+//            count++;
+//        }
+//        double devide_by = (double) slot_count;
+//        double uold = (sum_jp - sum_old) / (devide_by * old_improve);
+//        double unew = (sum_jp - sum_new) / (devide_by * new_improve);
+//
+//        double joint_utility = (uold + unew);
+//        //     System.out.println("Calculating: "+old.getID()+","+nnew.getID()+" Grpisze "+new_grp_size+" contr "+joint_utility);
+//        return joint_utility;
+//    }
+//    public double contributionCalc(double[] old, double[] nnew, int grp_size)
+//    {
+//
+//        double[] pold = old;
+//        double[] pnew = nnew;
+//        int new_grp_size = grp_size;
+//        int slot_count = GlobalData.slot_count;
+//        double[] grp = new double[slot_count];
+//        double jp = 0.0;
+//        double _old = 0.0;
+//        double _new = 0.0;
+//        double sum_jp = 0.0;
+//        double sum_old = 0.0;
+//        double sum_new = 0.0;
+//        int count = 0;
+//        long pattern = GlobalData.golayCode.ConvertToPatternUsingStaticThesoldForGroup(old, grp_size);
+//        for (int i = slot_count - 1; i >= 0; i--, pattern = pattern >> 1)
+//        {
+//            //     if((pattern & 1)==1)
+//            //       continue;
+//            _old = 1 - pold[i];
+//            _new = 1 - pnew[i];
+//            jp = 1 - _old * _new;
+//            grp[i] = jp;
+//            sum_old += pold[i];
+//            sum_new += pnew[i];
+//            sum_jp += jp;
+//            count++;
+//        }
+//        double devide_by = (double) count * new_grp_size;
+//        double uold = (sum_jp - sum_old) / (devide_by);
+//        double unew = (sum_jp - sum_new) / (devide_by);
+//        double joint_utility = (uold + unew);
+//        return joint_utility;
+//    }
     public double contributionCalc(SingleNode old, SingleNode nnew)
     {
-
         double[] pold = old.slot;
         double[] pnew = nnew.slot;
+        
         int new_grp_size = old.grp_size + nnew.grp_size;
         int old_improve = new_grp_size - old.grp_size;
         int new_improve = new_grp_size - nnew.grp_size;
 
-        //    int new_grp_size=1;
         int slot_count = GlobalData.slot_count;
         double[] grp = new double[slot_count];
         double jp = 0.0;
@@ -251,41 +327,64 @@ public class gAlgoJP extends gAlgo
         double sum_old = 0.0;
         double sum_new = 0.0;
         int count = 0;
-        long pattern = old.pattern;
-        for (int i = slot_count - 1; i >= 0; i--, pattern = pattern >> 1)
+        int beta = GlobalData.BETA;
+        double oldPrAvg = 0.0;
+        double newPrAvg = 0.0;
+        double jpAvg = 0.0;
+        double oldPrSum = 0.0;
+        double newPrSum = 0.0;
+        double jpSum = 0.0;
+        
+        for(int i = slot_count - 1; i >= 0; i--)
         {
-            //    if((pattern & 1)==1)
-            //         continue;
+            oldPrSum += pold[i];
+            newPrSum += pnew[i];
+            jpSum += (1 - (1 - pold[i])*(1 - pnew[i]));
+        }
+        
+        oldPrAvg = oldPrSum / (double)slot_count;
+        newPrAvg = newPrSum / (double)slot_count;
+        jpAvg = jpSum / (double)slot_count;
+        
+        for (int i = slot_count - 1; i >= 0; i--)
+        {
             _old = 1 - pold[i];
             _new = 1 - pnew[i];
             jp = 1 - _old * _new;
-            grp[i] = jp;
-            sum_old += pold[i];
-            sum_new += pnew[i];
-            sum_jp += jp;
+
+            double exactAv = 0.0;
+            double exactOldAv = 0.0;
+            double exactNewAv = 0.0;
+            
+            for (int j = 1; j < beta; j++)
+            {
+                exactAv += MathUtils.binomialCoefficientDouble(slot_count, j) * Math.pow(jpAvg, j)
+                        * Math.pow(1 - jpAvg, slot_count - j);
+                exactOldAv += MathUtils.binomialCoefficientDouble(slot_count, j) * Math.pow(oldPrAvg, j)
+                        * Math.pow(1 - oldPrAvg, slot_count - j);
+                exactNewAv += MathUtils.binomialCoefficientDouble(slot_count, j) * Math.pow(newPrAvg, j)
+                        * Math.pow(1 - newPrAvg, slot_count - j);
+            }
+
+            grp[i] = jp - exactAv;
+
+            sum_old += old.slot[i] - exactOldAv;
+            sum_new += nnew.slot[i] - exactNewAv;
+
+            sum_jp += grp[i];
             count++;
         }
-        /*
-         double devide_by=(double)count*new_grp_size;
-         double uold=(sum_jp-sum_old)/(devide_by);
-         double unew=(sum_jp-sum_new)/(devide_by);
-
-         *
-         */
+        
         double devide_by = (double) slot_count;
         double uold = (sum_jp - sum_old) / (devide_by * old_improve);
         double unew = (sum_jp - sum_new) / (devide_by * new_improve);
 
         double joint_utility = (uold + unew);
-        //     System.out.println("Calculating: "+old.getID()+","+nnew.getID()+" Grpisze "+new_grp_size+" contr "+joint_utility);
         return joint_utility;
     }
 
-    public double contributionCalc(double[] old, double[] nnew, int grp_size)
+    public double contributionCalc(double[] pold, double[] pnew, int grp_size)
     {
-
-        double[] pold = old;
-        double[] pnew = nnew;
         int new_grp_size = grp_size;
         int slot_count = GlobalData.slot_count;
         double[] grp = new double[slot_count];
@@ -296,20 +395,57 @@ public class gAlgoJP extends gAlgo
         double sum_old = 0.0;
         double sum_new = 0.0;
         int count = 0;
-        long pattern = GlobalData.golayCode.ConvertToPatternUsingStaticThesoldForGroup(old, grp_size);
-        for (int i = slot_count - 1; i >= 0; i--, pattern = pattern >> 1)
+        int beta = GlobalData.BETA;
+        
+        double oldPrAvg = 0.0;
+        double newPrAvg = 0.0;
+        double jpAvg = 0.0;
+        double oldPrSum = 0.0;
+        double newPrSum = 0.0;
+        double jpSum = 0.0;
+        
+        for(int i = slot_count - 1; i >= 0; i--)
         {
-            //     if((pattern & 1)==1)
-            //       continue;
+            oldPrSum += pold[i];
+            newPrSum += pnew[i];
+            jpSum += (1 - (1 - pold[i])*(1 - pnew[i]));
+        }
+        
+        oldPrAvg = oldPrSum / (double)slot_count;
+        newPrAvg = newPrSum / (double)slot_count;
+        jpAvg = jpSum / (double)slot_count;
+        
+        for (int i = slot_count - 1; i >= 0; i--)
+        {
             _old = 1 - pold[i];
             _new = 1 - pnew[i];
             jp = 1 - _old * _new;
-            grp[i] = jp;
-            sum_old += pold[i];
-            sum_new += pnew[i];
-            sum_jp += jp;
+
+            double exactAv = 0.0;
+            double exactOldAv = 0.0;
+            double exactNewAv = 0.0;
+            
+            for (int j = 1; j < beta; j++)
+            {
+                exactAv += MathUtils.binomialCoefficientDouble(slot_count, j) * Math.pow(jpAvg, j)
+                        * Math.pow(1 - jpAvg, slot_count - j);
+                
+                exactOldAv += MathUtils.binomialCoefficientDouble(slot_count, j) * Math.pow(oldPrAvg, j)
+                        * Math.pow(1 - oldPrAvg, slot_count - j);
+                
+                exactNewAv += MathUtils.binomialCoefficientDouble(slot_count, j) * Math.pow(newPrAvg, j)
+                        * Math.pow(1 - newPrAvg, slot_count - j);
+            }
+
+            grp[i] = jp - exactAv;
+
+            sum_old += (pold[i] - exactOldAv);
+            sum_new += (pnew[i] - exactNewAv);
+
+            sum_jp += grp[i];
             count++;
         }
+        
         double devide_by = (double) count * new_grp_size;
         double uold = (sum_jp - sum_old) / (devide_by);
         double unew = (sum_jp - sum_new) / (devide_by);
@@ -317,62 +453,15 @@ public class gAlgoJP extends gAlgo
         return joint_utility;
     }
 
-    public double newContributionCalc(SingleNode old, SingleNode nnew)
-    {
-        double[] pold = old.slot;
-        double[] pnew = nnew.slot;
-        int new_grp_size = old.grp_size + nnew.grp_size;
-        int old_improve = new_grp_size - old.grp_size;
-        int new_improve = new_grp_size - nnew.grp_size;
-
-        //    int new_grp_size=1;
-        int slot_count = GlobalData.slot_count;
-        double[] grp = new double[slot_count];
-        double jp = 0.0;
-        double _old = 0.0;
-        double _new = 0.0;
-        double sum_jp = 0.0;
-        double sum_old = 0.0;
-        double sum_new = 0.0;
-        int count = 0;
-        long pattern = old.pattern;
-        for (int i = slot_count - 1; i >= 0; i--, pattern = pattern >> 1)
-        {
-            //    if((pattern & 1)==1)
-            //         continue;
-            _old = 1 - pold[i];
-            _new = 1 - pnew[i];
-            jp = 1 - _old * _new;
-            grp[i] = jp;
-            sum_old += pold[i];
-            sum_new += pnew[i];
-            sum_jp += jp;
-            count++;
-        }
-        /*
-         double devide_by=(double)count*new_grp_size;
-         double uold=(sum_jp-sum_old)/(devide_by);
-         double unew=(sum_jp-sum_new)/(devide_by);
-
-         *
-         */
-        double devide_by = (double) slot_count; 
-        double uold = (sum_jp - sum_old) / (devide_by * old_improve);
-        double unew = (sum_jp - sum_new) / (devide_by * new_improve);
-
-        double joint_utility = (uold + unew);
-        //     System.out.println("Calculating: "+old.getID()+","+nnew.getID()+" Grpisze "+new_grp_size+" contr "+joint_utility);
-        return joint_utility;
-    }
-
-    double[] new_group(double[] pold, double[] pnew)
+    public double[] new_group(double[] pold, double[] pnew)
     {
         double jp = 0.0;
         double _old = 0.0;
         double _new = 0.0;
         int slot_count = GlobalData.slot_count;
         double[] grp = new double[slot_count];
-
+        
+        
         for (int i = 0; i < slot_count; i++)
         {
             _old = 1 - pold[i];
@@ -381,6 +470,39 @@ public class gAlgoJP extends gAlgo
             grp[i] = jp;
         }
         return grp;
+    }
+
+    //Do not use, in-correct !!
+    public double[][] new_group(SingleNode a, SingleNode b)
+    {
+        double _old = 0.0, _new = 0.0, atLeastOneAv = 0.0, exactAv = 0.0;
+        int slotCount = GlobalData.slot_count;
+        int beta = GlobalData.BETA;
+        double[] grpOne = new double[slotCount];
+        double[] grpBeta = new double[slotCount];
+        double[][] ret = new double[2][slotCount];
+        
+        
+        for (int i = 0; i < slotCount; i++)
+        {
+            _old = 1 - a.slot[i];
+            _new = 1 - b.slot[i];
+            atLeastOneAv = 1 - _old * _new;
+            grpOne[i] = atLeastOneAv;
+            exactAv = 0.0;
+
+            for (int j = 1; j < beta; j++)
+            {
+                exactAv += MathUtils.binomialCoefficientDouble(slotCount, j) * Math.pow(atLeastOneAv, j)
+                        * Math.pow(1 - atLeastOneAv, slotCount - j);
+            }
+            grpBeta[i] = atLeastOneAv - exactAv;
+        }
+
+        System.arraycopy(grpOne, 0, ret[0], 0, slotCount);
+        System.arraycopy(grpBeta, 0, ret[1], 0, slotCount);
+
+        return ret;
     }
 
     public ArrayList<KnownNode> updateKnownList(SingleNode a, SingleNode b)

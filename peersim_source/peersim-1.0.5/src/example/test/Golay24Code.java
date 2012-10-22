@@ -7,6 +7,7 @@ package example.test;
 
 import java.util.ArrayList;
 import java.util.Vector;
+import org.apache.commons.math.util.MathUtils;
 
 /**
  *
@@ -109,19 +110,41 @@ public class Golay24Code
     {
         double totalValue,threshold;
         totalValue=0;
+        double[] aRowInputCopy = new double[aRowInput.length];
+        System.arraycopy(aRowInput, 0, aRowInputCopy, 0, aRowInput.length);
+        
+        double aRowInputAvg = 0.0, aRowInputSum = 0.0;
+        for(int i = 0; i < aRowInput.length; i++)
+            aRowInputSum += aRowInput[i];
+        
+        aRowInputAvg = aRowInputSum / (double)aRowInput.length;
+        
+        int beta = GlobalData.BETA;
+        int slotCount = GlobalData.slot_count;
+        for(int i = 0; i < aRowInputCopy.length; i++)
+        {
+            double exactAv = 0.0;
+            for(int j = 1; j < beta; j++)
+            {
+                exactAv += MathUtils.binomialCoefficientDouble(slotCount, j) * Math.pow(aRowInputAvg, j)
+                        * Math.pow(1 - aRowInputAvg, slotCount - j);
+            }
+            aRowInputCopy[i] -= exactAv;
+        }
+        
         for(int i=0;i<24;i++)
         {
-            totalValue=totalValue+aRowInput[i];
+            totalValue += aRowInputCopy[i];
         }
         threshold=totalValue/24;//(totalValue/24-lowestValue)*.1;
-
+        
         long aCodeWord=0;
         for(int i=0;i<24;i=i+2)
         {
             aCodeWord=aCodeWord<<2;
-            if(aRowInput[i]+aRowInput[i+1]>=threshold*2)
+            if(aRowInputCopy[i]+aRowInputCopy[i+1]>=threshold*2)
                 aCodeWord=aCodeWord | 3;
-            else if(aRowInput[i]+aRowInput[i+1]>=threshold)
+            else if(aRowInputCopy[i]+aRowInputCopy[i+1]>=threshold)
             {
                 aCodeWord=aCodeWord | 2;
             }
@@ -148,13 +171,34 @@ public class Golay24Code
         }
      *
      */
-
+        double[] aRowInputCopy = new double[aRowInput.length];
+        System.arraycopy(aRowInput, 0, aRowInputCopy, 0, aRowInput.length);
+        
+        double aRowInputAvg = 0.0, aRowInputSum = 0.0;
+        for(int i = 0; i < aRowInput.length; i++)
+            aRowInputSum += aRowInput[i];
+        
+        aRowInputAvg = aRowInputSum / (double)aRowInput.length;
+        
+        int beta = GlobalData.BETA;
+        int slotCount = GlobalData.slot_count;
+        for(int i = 0; i < aRowInputCopy.length; i++)
+        {
+            double exactAv = 0.0;
+            for(int j = 1; j < beta; j++)
+            {
+                exactAv += MathUtils.binomialCoefficientDouble(slotCount, j) * Math.pow(aRowInputAvg, j)
+                        * Math.pow(1 - aRowInputAvg, slotCount - j);
+            }
+            aRowInputCopy[i] -= exactAv;
+        }
+        
         for(int i=0;i<24;i=i+2)
         {
               aCodeWord=aCodeWord<<2;
-              if((aRowInput[i]+aRowInput[i+1])/2>=.5)
+              if((aRowInputCopy[i]+aRowInputCopy[i+1])/2>=.5)
                 aCodeWord=aCodeWord | 3;
-             else if((aRowInput[i]+aRowInput[i+1])/2>=.2)
+             else if((aRowInputCopy[i]+aRowInputCopy[i+1])/2>=.2)
             {
                  aCodeWord=aCodeWord | 2;
             }
@@ -179,10 +223,30 @@ public class Golay24Code
             }
        }
      *
-     */
+     */ double[] aRowInputCopy = new double[aRowInput.length];
+        System.arraycopy(aRowInput, 0, aRowInputCopy, 0, aRowInput.length);
+        
+        double aRowInputAvg = 0.0, aRowInputSum = 0.0;
+        for(int i = 0; i < aRowInput.length; i++)
+            aRowInputSum += aRowInput[i];
+        
+        aRowInputAvg = aRowInputSum / (double)aRowInput.length;
+        
+        int beta = GlobalData.BETA;
+        int slotCount = GlobalData.slot_count;
+        for(int i = 0; i < aRowInputCopy.length; i++)
+        {
+            double exactAv = 0.0;
+            for(int j = 1; j < beta; j++)
+            {
+                exactAv += MathUtils.binomialCoefficientDouble(slotCount, j) * Math.pow(aRowInputAvg, j)
+                        * Math.pow(1 - aRowInputAvg, slotCount - j);
+            }
+            aRowInputCopy[i] -= exactAv;
+        }
         for(int i=0;i<24;i++)
         {
-            totalValue=totalValue+aRowInput[i];
+            totalValue=totalValue+aRowInputCopy[i];
         }
         threshold=totalValue/24;
         double threshold1=threshold*0.90;
@@ -211,7 +275,7 @@ public class Golay24Code
             for(int i=0;i<24;i=i+2)
             {
                 aCodeWord=aCodeWord<<2;
-                if((aRowInput[i]+aRowInput[i+1])/2>=threshold1)
+                if((aRowInputCopy[i]+aRowInputCopy[i+1])/2>=threshold1)
                     aCodeWord=aCodeWord | 3;
           //      else if((aRowInput[i]+aRowInput[i+1])/2>=threshold2)
                 {

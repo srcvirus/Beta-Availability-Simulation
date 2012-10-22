@@ -63,11 +63,15 @@ public class PeerDynamics implements Control
         int protocolID = 1;
         Vector incomingReqQueue = new Vector();
         Vector outReqQueue = new Vector();
+        int beta = GlobalData.BETA;
 
         for (int j = 0; j < Network.size(); j++)
         {
             boolean should_wait = false;
             peer_to_grp = null;
+
+            PriorityQueue<PeerComparator> peersToGroup = new PriorityQueue<PeerComparator>();
+
             SingleNode self = (SingleNode) Network.get(j);
             max_contribution = 0.0;
             genericProtocol gp = (genericProtocol) self.getProtocol(protocolID);
@@ -122,6 +126,8 @@ public class PeerDynamics implements Control
                     {
                         continue;//nneed to send deny message
                     }
+
+                    peersToGroup.add(new PeerComparator(peer, contribution, -1));
                     if ((contribution - max_contribution) > 0.001)
                     {
                         max_contribution = contribution;
@@ -129,30 +135,43 @@ public class PeerDynamics implements Control
                     }
                 }
             }
-            if (peer_to_grp != null)
+
+            if (!peersToGroup.isEmpty())
             {
-                genericProtocol greply;
-                SingleNode leader = peer_to_grp;
-                if (peer_to_grp.grp_flag)
+                int peersProcessed = 0;
+                Vector <SingleNode> processedPeers = new Vector <SingleNode>();
+                while (!peersToGroup.isEmpty() && peersProcessed < beta)
                 {
-                    leader = GlobalData.grouplist.get(peer_to_grp.grp_id - 1).leader;
+                    PeerComparator pc = peersToGroup.poll();
+                    SingleNode peerToGroup = pc.getPeer();
+                    genericProtocol greply;
+                    SingleNode leader = peerToGroup;
+                    
+                    if (peerToGroup.grp_flag)
+                    {
+                        leader = GlobalData.grouplist.get(peerToGroup.grp_id - 1).leader;
+                    }
+                    if (leader.isUp() == true)
+                    {
+                        leader.group_processing = true;
+                        self.group_processing = true;
+                        greply = (genericProtocol) leader.getProtocol(protocolID);
+                        replyMessage fm = new replyMessage(genericMessage.MSG_REPLY, self);
+                        greply.sendMessage(fm, peerToGroup);
+                        //      System.out.println("Sending mes To"+ peer_to_grp.getID()+" from "+self.getID()+" "+fm.getId()+" Type "+fm.toString());
+                        processedPeers.add(peerToGroup);
+                        peersProcessed++;
+                        //tp.sendReqDenile(protocolID, self, peerToGroup);
+                        //incomingReqQueue.clear();
+                    }
+                    else
+                    {
+                        tp.sendReqDenile(protocolID, self);
+                        //incomingReqQueue.clear();
+                    }
                 }
-                if (leader.isUp() == true)
-                {
-                    leader.group_processing = true;
-                    self.group_processing = true;
-                    greply = (genericProtocol) leader.getProtocol(protocolID);
-                    replyMessage fm = new replyMessage(genericMessage.MSG_REPLY, self);
-                    greply.sendMessage(fm, peer_to_grp);
-                    //      System.out.println("Sending mes To"+ peer_to_grp.getID()+" from "+self.getID()+" "+fm.getId()+" Type "+fm.toString());
-                    tp.sendReqDenile(protocolID, self, peer_to_grp);
-                    incomingReqQueue.clear();
-                }
-                else
-                {
-                    tp.sendReqDenile(protocolID, self);
-                    incomingReqQueue.clear();
-                }
+                tp.sendReqDenile(protocolID, self, processedPeers);
+                incomingReqQueue.clear();
             }
             else if (should_wait == false)
             {

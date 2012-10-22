@@ -70,6 +70,7 @@ private long ID;
 
  // List<Double> slot;
 protected double slot[];
+protected double beta_slot[];
 protected double slot_single[];
 protected long pattern;
 protected long pattern_single;

@@ -18,7 +18,7 @@ import peersim.common.*;
 public class  GlobalData {
     public static final long node_count = Configuration.getInt("network.size");
     public static final int slot_count = Configuration.getInt("simulation.slots");
-    public static final int known_count = 10; //10
+    public static final int known_count = 15; //10
     public static final int wait_cycle = 10; //10
     public static final int grp_limit=Configuration.getInt("simulation.groupsize");
     public static final int varied_uptime=Configuration.getInt("simulation.uptime");
