@@ -69,6 +69,7 @@ public class Golay24Code
         if(SNode.getID()==26)
             System.out.println();
         long pattern=ConvertToPatternUsingStaticThesold(SNode.slot);
+        //long pattern = ConvertToPatternByCombiningTwo(SNode.slot);
         SNode.pattern=pattern;
         SNode.pattern_single=pattern;
         PlexusNode p=new PlexusNode(SNode,pattern);

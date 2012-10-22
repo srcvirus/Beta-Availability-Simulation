@@ -577,37 +577,9 @@ public class PeerFunction implements Control
                 {
                     GlobalData.done_cycle = cycle;
                 }
-                
-                
-                //Finding out min, max, mean and median groups sizes after converging
-                ArrayList <Integer> groupSizes = new ArrayList<Integer> ();
-                
-                for(int i = 0; i < GlobalData.current_grpcount; i++)
-                {
-                    groupSizes.add(GlobalData.grouplist.get(i).memberlist.size());
-                }
-                
-                Collections.sort(groupSizes);
-                int groupSizeSum = 0;
-                for(Integer size: groupSizes)
-                    groupSizeSum += size.intValue();
-                
-                double meanGroupSize = (double)groupSizeSum / (double)groupSizes.size();
-                int medianGroupSize = groupSizes.get(groupSizes.size() / 2);
-                int minGroupSize = groupSizes.get(0);
-                int maxGroupSize = groupSizes.get(groupSizes.size() - 1);
-                
-                try
-                {
-                    BufferedWriter sizeWriter = new BufferedWriter(new FileWriter(new File("output\\groupSize.txt")));  
-                    sizeWriter.write(meanGroupSize + " " + medianGroupSize + " " + minGroupSize + " " + maxGroupSize);
-                    sizeWriter.newLine();
-                    sizeWriter.close();
-                }
-                catch(Exception ex)
-                {
-                    ex.printStackTrace();
-                }
+
+
+
             }
 
             if (cycle >= run_cycles && cycle < max_cycles - 1)
@@ -708,6 +680,52 @@ public class PeerFunction implements Control
                     req.write(" ");
                     req.write("\n");
                     req.close();
+
+                    //Finding out min, max, mean and median groups sizes after converging
+                    ArrayList<Integer> groupSizes = new ArrayList<Integer>();
+
+                    for (int i = 0; i < GlobalData.current_grpcount; i++)
+                    {
+                        groupSizes.add(GlobalData.grouplist.get(i).memberlist.size());
+                    }
+
+                    Collections.sort(groupSizes);
+                    int groupSizeSum = 0;
+                    for (Integer size : groupSizes)
+                    {
+                        groupSizeSum += size.intValue();
+                    }
+
+                    double meanGroupSize = (double) groupSizeSum / (double) groupSizes.size();
+                    int medianGroupSize = groupSizes.get(groupSizes.size() / 2);
+                    int minGroupSize = groupSizes.get(0);
+                    int maxGroupSize = groupSizes.get(groupSizes.size() - 1);
+                    int[] bucket = new int[maxGroupSize + 1];
+                    for (int i = 0; i <= maxGroupSize; i++)
+                    {
+                        bucket[i] = 0;
+                    }
+                    for (int i = 0; i < groupSizes.size(); i++)
+                    {
+                        bucket[ groupSizes.get(i).intValue()]++;
+                    }
+
+                    try
+                    {
+                        BufferedWriter sizeWriter = new BufferedWriter(new FileWriter(new File("output\\groupSize.txt")));
+                        sizeWriter.write(meanGroupSize + " " + medianGroupSize + " " + minGroupSize + " " + maxGroupSize);
+                        sizeWriter.newLine();
+                        for (int i = minGroupSize; i <= maxGroupSize; i++)
+                        {
+                            sizeWriter.write(i + " " + 100.0 * (double) bucket[i] / (double) groupSizes.size());
+                            sizeWriter.newLine();
+                        }
+                        sizeWriter.close();
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.printStackTrace();
+                    }
                 }
                 catch (Exception e)
                 {

@@ -70,7 +70,9 @@ public class Golay24CodeWord
         for(int i=0;i<24;i++)
         {
             if((pattern1 & 1)!= (pattern2 & 1))
+            {
                 distance++;
+            }
             pattern1=pattern1>>1;
             pattern2=pattern2>>1;
         }
