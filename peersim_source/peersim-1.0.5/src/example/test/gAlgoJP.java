@@ -644,6 +644,9 @@ public class gAlgoJP extends gAlgo
 
     public void mergeGroup(SingleNode a, SingleNode b)
     {
+        if(a.grp_flag && b.grp_flag && a.grp_id == b.grp_id) 
+            return;
+        
         double[] grp = new_group(a.slot, b.slot);
         System.arraycopy(grp, 0, a.slot, 0, grp.length);
         System.arraycopy(grp, 0, b.slot, 0, grp.length);

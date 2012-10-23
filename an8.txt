@@ -1,0 +1,31 @@
+ ## Global simulation properties
+random.seed 1234567890
+simulation.cycles 961
+run.cycles 720
+simulation.shuffle
+network.size 10000
+simulation.groupsize 8
+simulation.percentage 80
+simulation.slots	 24
+simulation.input 0.8
+
+network.node example.test.SingleNode
+
+protocol.0 peersim.core.IdleProtocol
+protocol.0.degree 5
+
+
+init.rnd peersim.dynamics.WireKOut
+init.rnd.protocol 0
+init.rnd.k 5
+
+protocol.1 example.test.TestProtocol
+protocol.1.linkable 0
+
+control.dyn example.test.PeerFunction 
+control.dyn.protocol 1
+
+control.avgo example.test.PeerDynamics
+control.avgo.protocol 1
+
+

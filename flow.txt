@@ -1,0 +1,59 @@
+0.0. alpah0.0
+0.5. alpah0.5
+0.6. Ubiform me
+0.7. Multiplied by 2 by nahid
+0.8. Combined
+0.9. Combined, true uptime
+10. Combined-group size 24
+
+<target name="allrun" >  <!--depends="take-arg,compile"-->
+       <java jar="G:\peersim_1\dist\peersim_1.jar" >
+            <arg value="G:/peersim_1/an6.txt" />
+        </java>
+        <java jar="G:\new_random\dist\Dyn_Random.jar" >
+            <arg value="G:/peersim_1/an6.txt" />
+        </java>
+        <java jar="G:\global_grping\dist\Global.jar" >
+            <arg value="G:/peersim_1/an6.txt" />
+        </java>
+        <java jar="E:\P2P-measurement\with plexus\Global-plexus\dist\Global-plexus.jar" >
+            <arg value="E:\P2P-measurement\with plexus\Global-plexus\an6.txt" />
+        </java>
+        <java jar="G:\peersim_1\dist\peersim_1.jar" >
+            <arg value="G:/peersim_1/an8.txt" />
+        </java>
+        <java jar="G:\new_random\dist\Dyn_Random.jar" >
+            <arg value="G:/peersim_1/an8.txt" />
+        </java>
+        <java jar="G:\global_grping\dist\Global.jar" >
+            <arg value="G:/peersim_1/an8.txt" />
+        </java>
+        <java jar="E:\P2P-measurement\with plexus\Global-plexus\dist\Global-plexus.jar" >
+            <arg value="E:\P2P-measurement\with plexus\Global-plexus\an8.txt" />
+        </java>
+    </target>
+
+
+ <target name="arun" > <!--depends="take-arg,compile"-->
+        <java jar="E:\P2P-measurement\with plexus\Global-plexus\dist\Global-plexus.jar" >
+            <arg value="E:\P2P-measurement\with plexus\Global-plexus\an.txt" />
+        </java>
+       <java jar="E:\P2P-measurement\with plexus\Global-plexus\dist\Global-plexus.jar" >
+            <arg value="E:\P2P-measurement\with plexus\Global-plexus\an5.txt" />
+        </java>
+        <java jar="E:\P2P-measurement\with plexus\Global-plexus\dist\Global-plexus.jar" >
+            <arg value="E:\P2P-measurement\with plexus\Global-plexus\an6.txt" />
+        </java>
+        <java jar="E:\P2P-measurement\with plexus\Global-plexus\dist\Global-plexus.jar" >
+            <arg value="E:\P2P-measurement\with plexus\Global-plexus\an7.txt" />
+        </java>
+        <java jar="E:\P2P-measurement\with plexus\Global-plexus\dist\Global-plexus.jar" >
+            <arg value="E:\P2P-measurement\with plexus\Global-plexus\an8.txt" />
+        </java>
+        <java jar="E:\P2P-measurement\with plexus\Global-plexus\dist\Global-plexus.jar" >
+            <arg value="E:\P2P-measurement\with plexus\Global-plexus\an9.txt" />
+        </java>
+        <java jar="E:\P2P-measurement\with plexus\Global-plexus\dist\Global-plexus.jar" >
+            <arg value="E:\P2P-measurement\with plexus\Global-plexus\an10.txt" />
+        </java>
+    </target>

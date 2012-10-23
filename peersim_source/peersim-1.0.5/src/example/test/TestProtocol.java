@@ -191,6 +191,8 @@ public class TestProtocol extends genericProtocol
         }
         //    incomingDenyQueue.clear();
     }
+    
+    
 
     public void deleteMesseges(SingleNode self, int protocolID)
     {
@@ -419,10 +421,8 @@ public class TestProtocol extends genericProtocol
             }
             int linkableID = FastConfig.getLinkable(protocolID);
             Linkable linkable = (Linkable) node.getProtocol(linkableID);
-            SingleNode peer_to_grp = null;
             List<PeerComparator> peersToGroup = new ArrayList<PeerComparator>();  //SRC: for beta-av..list of beta - f peers to send invitation
             double contribution;
-            double max_contribution = 0.0;
             SingleNode self = (SingleNode) node;
             SingleNode peer;
             gAlgoJP algo = new gAlgoJP();
@@ -483,7 +483,14 @@ public class TestProtocol extends genericProtocol
                 {
                     if (!incomingReplyQueue.isEmpty())
                     {
-                        for (Iterator i = incomingReplyQueue.iterator(); i.hasNext();)
+                        boolean grouping_done = false;
+                        Vector <SingleNode> leaderList = new Vector <SingleNode>();
+                        Vector <SingleNode> groupedPeers = new Vector <SingleNode>();
+                        if(cycle == 4 && self.getID() == 239)
+                        {
+                            System.out.println();
+                        }
+                        for (Iterator i = incomingReplyQueue.iterator(); i.hasNext(); i.remove())
                         {
                             genericMessage g = (genericMessage) i.next();
                             replyMessage gm = (replyMessage) g;
@@ -493,6 +500,7 @@ public class TestProtocol extends genericProtocol
                             }
                             algo.mergeGroup(self, gm.src);
                             SingleNode leader = GlobalData.grouplist.get(self.grp_id - 1).leader;
+                            leaderList.add(leader);
                             leader.grouping_done = true;
                             if (leader.getID() != self.getID())
                             {
@@ -502,14 +510,18 @@ public class TestProtocol extends genericProtocol
                                 //     System.out.println("Sending mes "+ fm.getId()+"To "+leader.getID()+" Type "+fm.toString());
                             }
                             isreplygot = true;
-                            sendReqDenile(protocolID, self, gm.src);
+                            //sendReqDenile(protocolID, self, gm.src);
+                            groupedPeers.add(gm.src);
                             deny_count = -1;
                             for (int l = 0; l < GlobalData.BETA; l++)
                             {
                                 wait_count[l] = 0; //wait_count = 0;
                             }
-                            break;
+                            //break;
+                            //System.out.println("loop");
                         }
+                        sendReqDenile(protocolID, self, groupedPeers);
+                        
                         for (int i = 0; i < GlobalData.BETA; i++)
                         {
                             outReqQueue[i].clear();
@@ -518,27 +530,6 @@ public class TestProtocol extends genericProtocol
                         incomingReqQueue.clear();
                         incomingReplyQueue.clear();
                     }
-                    /*else if (!outReqQueue.isEmpty())
-                     {
-                     reqMessage sentrm = (reqMessage) outReqQueue.get(0);
-                     denyMessage gotdm = gself.containDenyMessage(sentrm.dest);
-                     reqMessage gotrm = gself.containReqMessage(sentrm.dest);
-                     if (gotdm != null || gotrm != null)
-                     {
-                     reqCheck = true;
-                     outReqQueue.clear();
-                     wait_count = 0;
-                     }
-                     else
-                     {
-                     wait_count--;
-                     if (wait_count == 0)
-                     {
-                     noreply = sentrm.dest.getID();
-                     outReqQueue.clear();
-                     }
-                     }
-                     }*/
                     else
                     {
                         for (int i = 0; i < GlobalData.BETA; i++)
@@ -576,7 +567,6 @@ public class TestProtocol extends genericProtocol
 
                 if (isreplygot == false)
                 {
-                    int known_index = -1;
                     boolean allOutReqQueueEmpty = true;
                     boolean allReqCheck = true;
 
