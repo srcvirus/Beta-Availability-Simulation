@@ -1,9 +1,9 @@
-nbproject/*
+#nbproject/*
 output/*
-build.xml
+#build.xml
 build/*
-dist/*
+#dist/*
 *.md
-*.mf
+#*.mf
 
 
