@@ -163,6 +163,11 @@ public class PeerFunction implements Control
         int max_cycles = Configuration.getInt("simulation.cycles");
         if ((cycle < run_cycles && cycle % GlobalData.slot_cycle == 0) || cycle >= run_cycles)
         {
+            if (cycle > 0)
+            {
+                System.out.println();
+            }
+
             int slot_count = GlobalData.slot_count;
             double all_sum[] = new double[slot_count];
             int never_alive = 0;
@@ -186,8 +191,8 @@ public class PeerFunction implements Control
             int[] above_percentage95 = new int[GlobalData.failStateCount];
             int[] above_percentage75 = new int[GlobalData.failStateCount];
             int[] above_percentage85 = new int[GlobalData.failStateCount];
-            
-            for(int i = 0; i < GlobalData.failStateCount; i++) 
+
+            for (int i = 0; i < GlobalData.failStateCount; i++)
             {
                 above_percentage[i] = above_percentage90[i] = above_percentage95[i] = above_percentage75[i] = above_percentage85[i] = 0;
             }
@@ -205,41 +210,34 @@ public class PeerFunction implements Control
             int len = Network.size();
 
             per_node = new int[len];
-            
+
             for (int i = 0; i < len; i++)
             {
                 per_node[i] = 0;
             }
 
             //search for ungrouped peers
-            for (int i = 0; i < Network.size(); i++)
+            try
             {
-                SingleNode s = (SingleNode) Network.get(i);
-                if (!s.grp_flag)
-                {
-                    grp_sum = 0;
-                    ungrp_node_count++;
-                    //     System.out.println("Ungroup "+ungrp_node_count+" is :"+s.getID());
-                    sum_grp_size++;
-                    max_grp_size = 1;
-                    min_grp_size = 1;
-                    if (s.alive_once == false)
-                    {
-                        never_alive++;
-                    }
-                    try
-                    {
-                        data = new BufferedWriter(new FileWriter("output/fopt5_1ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
-                        data_2 = new BufferedWriter(new FileWriter("output/fopt5_2ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
-                        /*       data.write("Node Id: ");
-                         data.write(Long.toString(s.getID()));
-                         data.write(" ");
-                         data.write("Pattern: ");
-                         data.write(Get24BitsString(s.pattern));
-                         data.write(" ");
+                data = new BufferedWriter(new FileWriter("output/fopt5_1ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
+                data_2 = new BufferedWriter(new FileWriter("output/fopt5_2ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
 
-                         * 
-                         */
+                for (int i = 0; i < Network.size(); i++)
+                {
+                    SingleNode s = (SingleNode) Network.get(i);
+                    if (!s.grp_flag)
+                    {
+                        grp_sum = 0;
+                        ungrp_node_count++;
+                        //     System.out.println("Ungroup "+ungrp_node_count+" is :"+s.getID());
+                        sum_grp_size++;
+                        max_grp_size = 1;
+                        min_grp_size = 1;
+                        if (s.alive_once == false)
+                        {
+                            never_alive++;
+                        }
+
                         for (int j = 0; j < slot_count; j++)
                         {
                             double temp = s.slot[j];
@@ -273,9 +271,20 @@ public class PeerFunction implements Control
                             data_2.close();
                         }
                     }
-                    catch (Exception e)
-                    {
-                    }
+                }
+            } catch (Exception ex)
+            {
+                System.out.println("Exception in cycle: " + cycle);
+                ex.printStackTrace();
+            } finally
+            {
+                try
+                {
+                    data.close();
+                    data_2.close();
+                } catch (Exception e)
+                {
+                    ;
                 }
             }
 
@@ -300,29 +309,19 @@ public class PeerFunction implements Control
             single_sum = single_sum / (slot_count * ungrp_node_count);
             grp_count = 0;
             sum_grp_size = 0;
-            for (int k = 0; k < GlobalData.grouplist.size(); k++)
-            {
-                if (GlobalData.grouplist.get(k).isvalid)
-                {
-                    grp_sum = 0;
-                    grp_sum2 = 0;
-                    //prints groups and members
-                    try
-                    {
-                        data = new BufferedWriter(new FileWriter("output/fopt5_1ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
-                        data_2 = new BufferedWriter(new FileWriter("output/fopt5_2ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
-                        /*
-                         data.write("Group Id: ");
-                         data.write(Integer.toString(GlobalData.grouplist.get(k).grp_id));
-                         data.write(" Group Size: ");
-                         data.write(Integer.toString(GlobalData.grouplist.get(k).memberlist.get(0).grp_size));
-                         data.write(" Pattern: ");
-                         data.write(Get24BitsString(GlobalData.grouplist.get(k).memberlist.get(0).pattern));
-                         data.write("  ");
-                         */
 
-                        //   data.write(" Leader: ");
-                        //   data.write(Long.toString(GlobalData.grouplist.get(k).leader.getID()));
+            try
+            {
+                data = new BufferedWriter(new FileWriter("output/fopt5_1ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
+                data_2 = new BufferedWriter(new FileWriter("output/fopt5_2ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
+
+                for (int k = 0; k < GlobalData.grouplist.size(); k++)
+                {
+                    if (GlobalData.grouplist.get(k).isvalid)
+                    {
+                        grp_sum = 0;
+                        grp_sum2 = 0;
+                        //prints groups and members
 
                         for (int j = 0; j < slot_count; j++)
                         {
@@ -365,12 +364,12 @@ public class PeerFunction implements Control
                             grp_sum += temp;
                         }
                         /*    data.write(" Members: ");
-                         for(int l=0;l<GlobalData.grouplist.get(k).memberlist.get(0).grp_size;l++)
-                         {
-                         data.write(Long.toString(GlobalData.grouplist.get(k).memberlist.get(l).getID()));
-                         data.write(", ");
-                         }
-
+                        for(int l=0;l<GlobalData.grouplist.get(k).memberlist.get(0).grp_size;l++)
+                        {
+                        data.write(Long.toString(GlobalData.grouplist.get(k).memberlist.get(l).getID()));
+                        data.write(", ");
+                        }
+                        
                          *
                          */
                         if (cycle == max_cycles - 1)
@@ -389,7 +388,7 @@ public class PeerFunction implements Control
                             data.write(" ");
                             data.write(Integer.toString(GlobalData.grouplist.get(k).grp_size));
                             data.write("\n");
-                            data.close();
+                            
 
                             per_grp_2avail = grp_sum2 / slot_count;
                             avg_grp_2avail += per_grp_2avail;
@@ -405,8 +404,9 @@ public class PeerFunction implements Control
                             data_2.write(" ");
                             data_2.write(Integer.toString(GlobalData.grouplist.get(k).grp_size));
                             data_2.write("\n");
-                            data_2.close();
+                            
                             int sim_slots = max_cycles - 1 - run_cycles;
+
                             for (int l = 0; l < GlobalData.failStateCount; l++)
                             {
                                 int up_slots = sim_slots - (GlobalData.grouplist.get(k).down_slots + GlobalData.grouplist.get(k).down_fail_slots[l]);
@@ -444,9 +444,6 @@ public class PeerFunction implements Control
                                 nine.write("\n");
                                 nine.close();
                             }
-                            //       System.out.print("Group Id: "+GlobalData.grouplist.get(k).grp_id);
-                            //       System.out.print("Group size: "+GlobalData.grouplist.get(k).grp_size);
-                            //       System.out.println("Slot available :"+up_slots);
                         }
                         if (GlobalData.grouplist.get(k).grp_size > max_grp_size)
                         {
@@ -458,12 +455,27 @@ public class PeerFunction implements Control
                         }
                         sum_grp_size += GlobalData.grouplist.get(k).grp_size;
                         grp_count++;
-                    }
-                    catch (Exception e)
-                    {
+
                     }
                 }
+                data.close();
+                data_2.close();
+            } catch (Exception ex)
+            {
+                System.out.println("Exception in cycle: " + cycle);
+                ex.printStackTrace();
+            } finally
+            {
+                try
+                {
+                    data.close();
+                    data_2.close();
+                } catch (Exception e)
+                {
+                    ;
+                }
             }
+
             if (grp_count > 0)
             {
                 avg_grp_1avail /= grp_count;
@@ -474,8 +486,7 @@ public class PeerFunction implements Control
                 if (fraction >= 0.5)
                 {
                     avg_grp_size = intz + 1;
-                }
-                else
+                } else
                 {
                     avg_grp_size = intz;
                 }
@@ -525,14 +536,14 @@ public class PeerFunction implements Control
                     for (int j = 0; j < slot_count; j++)
                     {
                         String text = Double.toString(Round(all_sum[j] / Network.size(), 4));
-                        output.write(text);
-                        output.write(" ");
+                        output.write(text + " ");
                     }
                     output.write("\n");
                     output.close();
-                }
-                catch (Exception e)
+                } catch (Exception e)
                 {
+                    System.out.println("Exception in Cycle: " + cycle);
+                    e.printStackTrace();
                 }
             }
             if (cycle != 0 && cycle % GlobalData.slot_cycle == 0)
@@ -570,9 +581,10 @@ public class PeerFunction implements Control
                     }
                     output.write("\n");
                     output.close();
-                }
-                catch (Exception e)
+                } catch (Exception e)
                 {
+                    System.out.println("Exception in Cycle: " + cycle);
+                    e.printStackTrace();
                 }
 
                 System.out.println("Total grps: " + grp_count);
@@ -622,7 +634,7 @@ public class PeerFunction implements Control
                     double maxFail = Configuration.getDouble("simulation.maxfailure");
                     double failStep = Configuration.getDouble("simulation.failstep");
                     double fail = minFail;
-                    up = new BufferedWriter(new FileWriter("output/up_percentage_" + GlobalData.grp_limit + "_" + GlobalData.BETA + "_" + Network.size() + ".txt", true));
+                    up = new BufferedWriter(new FileWriter(new File("output/up_percentage_" + GlobalData.grp_limit + "_" + GlobalData.BETA + "_" + Network.size() + ".txt"), true));
                     up.write(Double.toString(GlobalData.alpha));
                     up.write(" ");
                     up.write(Integer.toString(5));
@@ -667,8 +679,8 @@ public class PeerFunction implements Control
                         down.write("\n");
                     }
                     down.close();
-                    
-                    for(int l = 0; l < GlobalData.failStateCount; l++)
+
+                    for (int l = 0; l < GlobalData.failStateCount; l++)
                     {
                         req = new BufferedWriter(new FileWriter("output/req" + GlobalData.grp_limit + "_f" + l + ".txt", true));
                         double ratio = (double) GlobalData.Req_counter / (double) GlobalData.Reply_counter;
@@ -772,14 +784,15 @@ public class PeerFunction implements Control
                             sizeWriter.newLine();
                         }
                         sizeWriter.close();
-                    }
-                    catch (Exception ex)
+                    } catch (Exception ex)
                     {
+                        System.out.println("Exception in Cycle: " + cycle);
                         ex.printStackTrace();
                     }
-                }
-                catch (Exception e)
+                } catch (Exception e)
                 {
+                    System.out.println("Exception in Cycle: " + cycle);
+                    e.printStackTrace();
                 }
                 //     show(all_grp_count);
                 System.out.println("Total Req messages " + GlobalData.Req_counter);
