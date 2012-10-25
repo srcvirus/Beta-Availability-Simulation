@@ -10,6 +10,9 @@ simulation.slots	 24
 simulation.input	 0.0
 simulation.uptime 6
 simulation.beta 2
+simulation.minfailure	0.0
+simulation.maxfailure	50.0
+simulation.failstep	5.0
 
 network.node example.test.SingleNode
 

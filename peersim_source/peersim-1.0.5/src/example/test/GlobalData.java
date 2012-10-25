@@ -23,12 +23,14 @@ public class  GlobalData {
     public static final int grp_limit=Configuration.getInt("simulation.groupsize");
     public static final int varied_uptime=Configuration.getInt("simulation.uptime");
     public static final int BETA = Configuration.getInt("simulation.beta");
-    public static final int slot_cycle =40;
+    public static final int slot_cycle =10;
     public static final int deny_counter =10; //3
     public static long Req_counter =0;
     public static int Reply_counter =0;
     public static int gid=0;
     public static int down_grps;
+    public static int[] down_grps_fail = new int[20];
+    public static int failStateCount = 0;
     public static int converged_cycle=0;
     public static int converged95_cycle=0;
     public static int converged99_cycle=0;
@@ -44,8 +46,8 @@ public class  GlobalData {
     public static int avg_pattern1=0;
     public static double alpha = Configuration.getDouble("simulation.input");
     public static final int percentage=Configuration.getInt("simulation.percentage");
-    public static double down_per[]=new double[slot_count];
-    public static double up_per[]=new double[slot_count];
+    public static double down_per[][]=new double[20][slot_count];
+    public static double up_per[][]=new double[20][slot_count];
     public static ArrayList<GroupNode> grouplist=new ArrayList<GroupNode>();
     public static ArrayList<KnownNode> knownList=new ArrayList<KnownNode>();
     public static Golay24Code golayCode=Golay24Code.getInstance();

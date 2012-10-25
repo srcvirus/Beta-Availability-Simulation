@@ -707,7 +707,7 @@ public class Golay24Code
         return str;
     }
 
-    int getIndexPerNode( )
+    double getIndexPerNode( )
     {
         int total=0;
         int freq[]= new int[20];
@@ -740,7 +740,7 @@ public class Golay24Code
         }
         System.out.println("MAximum index: "+maximum+ " MAximum index: "+minimum+ " zero: "+zerocount);
         double avg=(double)total/4096;
-        return (int) avg;
+        return avg;
     }
 }
 

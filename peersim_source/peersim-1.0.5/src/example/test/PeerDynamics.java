@@ -90,6 +90,8 @@ public class PeerDynamics implements Control
             if (!incomingReqQueue.isEmpty())
             {
                 genericMessage g;
+                int minHammingDistance = GlobalData.maxHammingDistance * 1024;
+                peersToGroup.clear();
                 for (Iterator i = incomingReqQueue.iterator(); i.hasNext();)
                 {
                     g = (genericMessage) i.next();
@@ -127,26 +129,41 @@ public class PeerDynamics implements Control
                         continue;//nneed to send deny message
                     }
 
-                    peersToGroup.add(new PeerComparator(peer, contribution, -1));
-                    if ((contribution - max_contribution) > 0.001)
+                    Golay24CodeWord selfCodeWord = new Golay24CodeWord(self.pattern);
+                    long complementedPattern = GlobalData.golayCode.GetPartialComplementPattern(peer.pattern);
+                    Golay24CodeWord complementedCodeWord = new Golay24CodeWord(complementedPattern);
+                    int hammingDistance = selfCodeWord.GetHammingDistance(complementedCodeWord.codeWord);
+                    if (hammingDistance < minHammingDistance)
                     {
-                        max_contribution = contribution;
-                        peer_to_grp = peer;
+                        peersToGroup.clear();
+                        peersToGroup.add(new PeerComparator(peer, contribution, -1));
+                        minHammingDistance = hammingDistance;
                     }
+                    else if (hammingDistance == minHammingDistance)
+                    {
+                        peersToGroup.add(new PeerComparator(peer, contribution, -1));
+                    }
+
+                    //peersToGroup.add(new PeerComparator(peer, contribution, -1));
+                    /*if ((contribution - max_contribution) > 0.001)
+                     {
+                     max_contribution = contribution;
+                     peer_to_grp = peer;
+                     }*/
                 }
             }
 
             if (!peersToGroup.isEmpty())
             {
                 int peersProcessed = 0;
-                Vector <SingleNode> processedPeers = new Vector <SingleNode>();
-                while (!peersToGroup.isEmpty() && peersProcessed < beta)
+                Vector<SingleNode> processedPeers = new Vector<SingleNode>();
+                while (!peersToGroup.isEmpty() && peersProcessed < 1)   //send reply to the peer having max contribution 'only'
                 {
                     PeerComparator pc = peersToGroup.poll();
                     SingleNode peerToGroup = pc.getPeer();
                     genericProtocol greply;
                     SingleNode leader = peerToGroup;
-                    
+
                     if (peerToGroup.grp_flag)
                     {
                         leader = GlobalData.grouplist.get(peerToGroup.grp_id - 1).leader;
@@ -186,6 +203,9 @@ public class PeerDynamics implements Control
         int cycle = CDState.getCycle();
         int run_cycles = Configuration.getInt("run.cycles");
         int max_cycles = Configuration.getInt("simulation.cycles");
+        int[] aliveMemberCount = new int[GlobalData.grouplist.size()];
+        for(int i = 0; i < aliveMemberCount.length; i++) aliveMemberCount[i] = 0;
+        
         //DHT or oracle will handle incoming messages to it
 
         if ((cycle % GlobalData.slot_cycle > 2) && (cycle < run_cycles))
@@ -203,6 +223,7 @@ public class PeerDynamics implements Control
             int down = 0;
             int down_grps = 0;
             int protocolID = 1;// hard code
+
             for (int i = 0; i < Network.size(); i++)
             {
                 SingleNode s = (SingleNode) Network.get(i);
@@ -235,6 +256,7 @@ public class PeerDynamics implements Control
                 else
                 {
                     s.setFailState(Fallible.OK);
+
                     active++;
                     s.explore_cycle = 0;
                     s.explored = false;
@@ -251,6 +273,8 @@ public class PeerDynamics implements Control
                     }
                 }
             }
+
+
             //     System.out.println();
             for (int k = 0; k < GlobalData.grouplist.size(); k++)
             {
@@ -274,6 +298,7 @@ public class PeerDynamics implements Control
 
                         if (self.isUp())
                         {
+                            aliveMemberCount[k]++;
                             up_member++;
                         }
                         //      System.out.print(GlobalData.grouplist.get(k).memberlist.get(l).getID()+", ");
@@ -299,6 +324,88 @@ public class PeerDynamics implements Control
                 GlobalData.avg_contribution = 0;
             }
         }
+
+        if ((cycle >= run_cycles && cycle < (max_cycles - 1)))
+        {
+            
+            double minFailureRate = Configuration.getDouble("simulation.minfailure");
+            double maxFailureRate = Configuration.getDouble("simulation.maxfailure");
+            double failStep = Configuration.getDouble("simulation.failstep");
+            double fail = 0.0;
+            
+            Vector<SingleNode> failCandidates = new Vector<SingleNode>();
+            for (int i = 0; i < Network.size(); i++)
+            {
+                SingleNode s = (SingleNode) Network.get(i);
+                if (s.getFailState() == Fallible.OK)
+                {
+                    failCandidates.add(s);
+                }
+            }
+            
+            int failIndex;
+            for (fail = minFailureRate, failIndex = 0; fail <= maxFailureRate; fail += failStep, failIndex++)
+            {
+                int downGroups = 0;
+                double failRate = fail / 100.0;
+                Vector <SingleNode> tempFailCandidate = new Vector <SingleNode>();
+                Vector <SingleNode> failedNodeSet = new Vector <SingleNode>();
+                
+                for(int k = 0; k < failCandidates.size(); k++) tempFailCandidate.add(failCandidates.get(k));
+                
+                int toFail = (int) Math.round(failRate * tempFailCandidate.size());
+                toFail = Math.min(tempFailCandidate.size(), toFail);
+                int failedCount = 0;
+                while (failedCount < toFail)
+                {
+                    int failId = randomGenerator.nextInt(tempFailCandidate.size());
+                    SingleNode failedNode = tempFailCandidate.get(failId);
+                    failedNodeSet.add(failedNode);
+                    
+                    if (failedNode.grp_flag == false)
+                    {
+                        downGroups++;
+                    }
+                    
+                    failedNode.setFailState(Fallible.DOWN);
+                    tempFailCandidate.remove(failId);
+                    failedCount++;
+                }
+                
+                for (int k = 0; k < GlobalData.grouplist.size(); k++)
+                {
+                    if (GlobalData.grouplist.get(k).isvalid)
+                    {
+                        int upMembers = 0;
+                        for (int l = 0; l < GlobalData.grouplist.get(k).grp_size; l++)
+                        {
+                            SingleNode self = GlobalData.grouplist.get(k).memberlist.get(l);
+                            if (self.isUp())
+                            {
+                                upMembers++;
+                            }
+                        }
+                        if (upMembers == 0 && (upMembers != aliveMemberCount[k]))
+                        {
+                            downGroups++;
+                            if (cycle >= run_cycles)
+                            {
+                                GlobalData.grouplist.get(k).down_fail_slots[failIndex]++;
+                            }
+                        }
+                    }
+                }
+                
+                for(int k = 0; k < failedNodeSet.size(); k++)
+                {
+                    failedNodeSet.get(k).setFailState(Fallible.OK);
+                }
+                GlobalData.down_grps_fail[failIndex] = downGroups;
+            }
+            
+            GlobalData.failStateCount = failIndex;
+        }
+
         return false;
     }
 }

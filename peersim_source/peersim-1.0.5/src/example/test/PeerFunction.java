@@ -51,6 +51,7 @@ import peersim.util.IncrementalStats;
  */
 public class PeerFunction implements Control
 {
+
     /**
      * Config parameter that determines the accuracy for standard deviation
      * before stopping the simulation. If not defined, a negative value is used
@@ -180,7 +181,16 @@ public class PeerFunction implements Control
             int min_grp_size = Network.size();
             int avg_grp_size = 0;
             int sum_grp_size = 0;
-            int above_percentage, above_percentage90, above_percentage95, above_percentage75, above_percentage85;
+            int[] above_percentage = new int[GlobalData.failStateCount];
+            int[] above_percentage90 = new int[GlobalData.failStateCount];
+            int[] above_percentage95 = new int[GlobalData.failStateCount];
+            int[] above_percentage75 = new int[GlobalData.failStateCount];
+            int[] above_percentage85 = new int[GlobalData.failStateCount];
+            
+            for(int i = 0; i < GlobalData.failStateCount; i++) 
+            {
+                above_percentage[i] = above_percentage90[i] = above_percentage95[i] = above_percentage75[i] = above_percentage85[i] = 0;
+            }
             double single_sum = 0;
             double grp_sum = 0;
             double grp_sum2 = 0;
@@ -195,7 +205,7 @@ public class PeerFunction implements Control
             int len = Network.size();
 
             per_node = new int[len];
-            above_percentage = above_percentage90 = above_percentage95 = above_percentage75 = above_percentage85 = 0;
+            
             for (int i = 0; i < len; i++)
             {
                 per_node[i] = 0;
@@ -219,8 +229,8 @@ public class PeerFunction implements Control
                     }
                     try
                     {
-                        data = new BufferedWriter(new FileWriter("output\\fopt5_1ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
-                        data_2 = new BufferedWriter(new FileWriter("output\\fopt5_2ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
+                        data = new BufferedWriter(new FileWriter("output/fopt5_1ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
+                        data_2 = new BufferedWriter(new FileWriter("output/fopt5_2ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
                         /*       data.write("Node Id: ");
                          data.write(Long.toString(s.getID()));
                          data.write(" ");
@@ -299,8 +309,8 @@ public class PeerFunction implements Control
                     //prints groups and members
                     try
                     {
-                        data = new BufferedWriter(new FileWriter("output\\fopt5_1ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
-                        data_2 = new BufferedWriter(new FileWriter("output\\fopt5_2ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
+                        data = new BufferedWriter(new FileWriter("output/fopt5_1ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
+                        data_2 = new BufferedWriter(new FileWriter("output/fopt5_2ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
                         /*
                          data.write("Group Id: ");
                          data.write(Integer.toString(GlobalData.grouplist.get(k).grp_id));
@@ -397,40 +407,43 @@ public class PeerFunction implements Control
                             data_2.write("\n");
                             data_2.close();
                             int sim_slots = max_cycles - 1 - run_cycles;
-                            int up_slots = sim_slots - GlobalData.grouplist.get(k).down_slots;
-                            int slot_per = (GlobalData.percentage * sim_slots) / 100;
-                            if (up_slots >= slot_per)
+                            for (int l = 0; l < GlobalData.failStateCount; l++)
                             {
-                                above_percentage++;
+                                int up_slots = sim_slots - (GlobalData.grouplist.get(k).down_slots + GlobalData.grouplist.get(k).down_fail_slots[l]);
+                                int slot_per = (GlobalData.percentage * sim_slots) / 100;
+                                if (up_slots >= slot_per)
+                                {
+                                    above_percentage[l]++;
+                                }
+                                slot_per = (90 * sim_slots) / 100;
+                                if (up_slots >= slot_per)
+                                {
+                                    above_percentage90[l]++;
+                                }
+                                slot_per = (95 * sim_slots) / 100;
+                                if (up_slots >= slot_per)
+                                {
+                                    above_percentage95[l]++;
+                                }
+                                slot_per = (75 * sim_slots) / 100;
+                                if (up_slots >= slot_per)
+                                {
+                                    above_percentage75[l]++;
+                                }
+                                slot_per = (85 * sim_slots) / 100;
+                                if (up_slots >= slot_per)
+                                {
+                                    above_percentage85[l]++;
+                                }
+                                nine = new BufferedWriter(new FileWriter("output/nine5_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + "_f" + l + ".txt", true));
+                                nine.write(Double.toString(Round(((up_slots * 100) / sim_slots), 2)));
+                                nine.write(" ");
+                                nine.write(Double.toString(Round(((GlobalData.grouplist.get(k).down_slots + GlobalData.grouplist.get(k).down_fail_slots[l] * 100) / sim_slots), 2)));
+                                nine.write(" ");
+                                nine.write(Integer.toString(GlobalData.grouplist.get(k).grp_size));
+                                nine.write("\n");
+                                nine.close();
                             }
-                            slot_per = (90 * sim_slots) / 100;
-                            if (up_slots >= slot_per)
-                            {
-                                above_percentage90++;
-                            }
-                            slot_per = (95 * sim_slots) / 100;
-                            if (up_slots >= slot_per)
-                            {
-                                above_percentage95++;
-                            }
-                            slot_per = (75 * sim_slots) / 100;
-                            if (up_slots >= slot_per)
-                            {
-                                above_percentage75++;
-                            }
-                            slot_per = (85 * sim_slots) / 100;
-                            if (up_slots >= slot_per)
-                            {
-                                above_percentage85++;
-                            }
-                            nine = new BufferedWriter(new FileWriter("output\\nine5_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
-                            nine.write(Double.toString(Round(((up_slots * 100) / sim_slots), 2)));
-                            nine.write(" ");
-                            nine.write(Double.toString(Round(((GlobalData.grouplist.get(k).down_slots * 100) / sim_slots), 2)));
-                            nine.write(" ");
-                            nine.write(Integer.toString(GlobalData.grouplist.get(k).grp_size));
-                            nine.write("\n");
-                            nine.close();
                             //       System.out.print("Group Id: "+GlobalData.grouplist.get(k).grp_id);
                             //       System.out.print("Group size: "+GlobalData.grouplist.get(k).grp_size);
                             //       System.out.println("Slot available :"+up_slots);
@@ -471,22 +484,22 @@ public class PeerFunction implements Control
             all_grp_count = ungrp_node_count + grp_count;
             if (cycle == 0)
             {
-                int index_per = GlobalData.golayCode.getIndexPerNode();
+                double index_per = GlobalData.golayCode.getIndexPerNode();
                 System.out.println("NodeCount: " + GlobalData.node_count + " IndexperNode: " + index_per);
                 System.out.println("Max " + GlobalData.max_pattern + "Min " + GlobalData.min_pattern + "avg " + GlobalData.avg_pattern1 / len);
 
 
                 try
                 {
-                    indexcount = new BufferedWriter(new FileWriter("output\\index5_" + GlobalData.grp_limit, true));
+                    indexcount = new BufferedWriter(new FileWriter("output/index5_" + GlobalData.grp_limit, true));
                     indexcount.write("\n");
                     indexcount.write(Integer.toString(len));
                     indexcount.write(" ");
-                    indexcount.write(Integer.toString(index_per));
+                    indexcount.write(Double.toString(index_per));
                     indexcount.write(" ");
                     indexcount.close();
 
-                    output = new BufferedWriter(new FileWriter("output\\write5_" + GlobalData.grp_limit + "_n" + len + "_a" + GlobalData.alpha + ".txt", true));
+                    output = new BufferedWriter(new FileWriter("output/write5_" + GlobalData.grp_limit + "_n" + len + "_a" + GlobalData.alpha + ".txt", true));
                     output.write("\n");
                     output.write(Integer.toString(cycle));
                     output.write(" ");
@@ -526,7 +539,7 @@ public class PeerFunction implements Control
             {
                 try
                 {
-                    output = new BufferedWriter(new FileWriter("output\\write5_" + GlobalData.grp_limit + "_n" + len + "_a" + GlobalData.alpha + ".txt", true));
+                    output = new BufferedWriter(new FileWriter("output/write5_" + GlobalData.grp_limit + "_n" + len + "_a" + GlobalData.alpha + ".txt", true));
                     output.write("\n");
                     output.write(Integer.toString(cycle));
                     output.write(" ");
@@ -579,119 +592,158 @@ public class PeerFunction implements Control
 
             if (cycle >= run_cycles && cycle < max_cycles - 1)
             {
-                double down_per = ((double) GlobalData.down_grps) / (double) all_grp_count;
-                double up_per = 1 - down_per;
-                int slot = cycle % slot_count;
-                GlobalData.down_per[slot] += down_per;
-                GlobalData.up_per[slot] += up_per;
+                double[] down_per = new double[GlobalData.failStateCount];
+                double[] up_per = new double[GlobalData.failStateCount];
+
+                for (int l = 0; l < GlobalData.failStateCount; l++)
+                {
+                    down_per[l] = (double) (GlobalData.down_grps + GlobalData.down_grps_fail[l]) / (double) all_grp_count;
+                    up_per[l] = 1 - down_per[l];
+                    if (up_per[l] < 0)
+                    {
+                        System.out.println();
+                    }
+                    int slot = cycle % slot_count;
+                    GlobalData.down_per[l][slot] += down_per[l];
+                    GlobalData.up_per[l][slot] += up_per[l];
+                }
+                //double down_per = ((double) GlobalData.down_grps) / (double) all_grp_count;
+                //double up_per = 1 - down_per;
+                //int slot = cycle % slot_count;
+                //GlobalData.down_per[slot] += down_per;
+                //GlobalData.up_per[slot] += up_per;
             }
 
             if (cycle == max_cycles - 1)
             {
                 try
                 {
-                    up = new BufferedWriter(new FileWriter("output\\up_percentage_" + GlobalData.grp_limit + ".txt", true));
+                    double minFail = Configuration.getDouble("simulation.minfailure");
+                    double maxFail = Configuration.getDouble("simulation.maxfailure");
+                    double failStep = Configuration.getDouble("simulation.failstep");
+                    double fail = minFail;
+                    up = new BufferedWriter(new FileWriter("output/up_percentage_" + GlobalData.grp_limit + "_" + GlobalData.BETA + "_" + Network.size() + ".txt", true));
                     up.write(Double.toString(GlobalData.alpha));
                     up.write(" ");
                     up.write(Integer.toString(5));
                     up.write(" ");
-                    for (int j = 0; j < slot_count; j++)
-                    {
-                        GlobalData.up_per[j] = GlobalData.up_per[j] / (((max_cycles - 1) - run_cycles) / slot_count);
-                        String text = Double.toString(Round((GlobalData.up_per[j] * 100), 2));
-                        up.write(text);
-                        up.write(" ");
-                    }
                     up.write("\n");
+
+
+                    for (int l = 0; l < GlobalData.failStateCount; l++, fail += failStep)
+                    {
+                        up.write(Double.toString(fail) + " ");
+                        double system_avg = 0.0;
+                        for (int j = 0; j < slot_count; j++)
+                        {
+                            GlobalData.up_per[l][j] = GlobalData.up_per[l][j] / (((max_cycles - 1) - run_cycles) / slot_count);
+                            system_avg += Round((GlobalData.up_per[l][j] * 100), 2);
+                            String text = Double.toString(Round((GlobalData.up_per[l][j] * 100), 2));
+                            up.write(text);
+                            up.write(" ");
+                        }
+                        system_avg /= (double) slot_count;
+                        up.write(Double.toString(Round(system_avg, 2)));
+                        up.write("\n");
+                    }
                     up.close();
 
-                    down = new BufferedWriter(new FileWriter("output\\down_percentage_" + GlobalData.grp_limit + ".txt", true));
+                    fail = minFail;
+                    down = new BufferedWriter(new FileWriter("output/down_percentage_" + GlobalData.grp_limit + "_" + GlobalData.BETA + "_" + Network.size() + ".txt", true));
                     down.write(Double.toString(GlobalData.alpha));
                     down.write(" ");
                     down.write(Integer.toString(5));
                     down.write(" ");
-                    for (int j = 0; j < slot_count; j++)
+                    for (int l = 0; l < GlobalData.failStateCount; l++, fail += failStep)
                     {
-                        GlobalData.down_per[j] = GlobalData.down_per[j] / (((max_cycles - 1) - run_cycles) / slot_count);
-                        String text = Double.toString(Round(GlobalData.down_per[j] * 100, 2));
-                        down.write(text);
-                        down.write(" ");
+                        down.write(Double.toString(fail) + " ");
+                        for (int j = 0; j < slot_count; j++)
+                        {
+                            GlobalData.down_per[l][j] = GlobalData.down_per[l][j] / (((max_cycles - 1) - run_cycles) / slot_count);
+                            String text = Double.toString(Round(GlobalData.down_per[l][j] * 100, 2));
+                            down.write(text);
+                            down.write(" ");
+                        }
+                        down.write("\n");
                     }
-                    down.write("\n");
                     down.close();
-
-                    req = new BufferedWriter(new FileWriter("output\\req" + GlobalData.grp_limit + ".txt", true));
-                    double ratio = (double) GlobalData.Req_counter / (double) GlobalData.Reply_counter;
-                    req.write(Double.toString(GlobalData.alpha));
-                    req.write(" ");
-                    req.write(Integer.toString(5));
-                    req.write(" ");
-                    req.write(Double.toString(Round(avg_grp_size, 2)));
-                    req.write(" ");
-                    req.write(Integer.toString(grp_count));
-                    req.write(" ");
-                    req.write(Integer.toString(above_percentage));
-                    req.write(" ");
-                    double above = (double) above_percentage75 / (double) grp_count;
-                    req.write(Double.toString(Round(above * 100, 2)));
-                    req.write(" ");
-                    above = (double) above_percentage / (double) grp_count;
-                    req.write(Double.toString(Round(above * 100, 2)));
-                    req.write(" ");
-                    above = (double) above_percentage85 / (double) grp_count;
-                    req.write(Double.toString(Round(above * 100, 2)));
-                    req.write(" ");
-                    above = (double) above_percentage90 / (double) grp_count;
-                    req.write(Double.toString(Round(above * 100, 2)));
-                    req.write(" ");
-                    above = (double) above_percentage95 / (double) grp_count;
-                    req.write(Double.toString(Round(above * 100, 2)));
-                    req.write(" ");
-                    req.write(Long.toString(GlobalData.Req_counter));
-                    req.write(" ");
-                    req.write(Long.toString(GlobalData.Reply_counter));
-                    req.write(" ");
-                    req.write(Double.toString(Round(ratio, 2)));
-                    req.write(" ");
-                    req.write(Integer.toString(GlobalData.converged_cycle));
-                    req.write(" ");
-                    req.write(Double.toString(Round(avg_grp_1avail, 6)));
-                    req.write(" ");
-                    req.write(Double.toString(Round(min_grp_1avail, 6)));
-                    req.write(" ");
-                    req.write(Double.toString(Round(max_grp_1avail, 6)));
-                    req.write(" ");
-                    req.write(Double.toString(Round(avg_grp_2avail, 6)));
-                    req.write(" ");
-                    req.write(Double.toString(Round(min_grp_2avail, 6)));
-                    req.write(" ");
-                    req.write(Double.toString(Round(max_grp_2avail, 6)));
-                    req.write(" ");
-                    req.write(Integer.toString(GlobalData.converged95_cycle));
-                    req.write(" ");
-                    req.write(Integer.toString(GlobalData.converged99_cycle));
-                    req.write(" ");
-                    req.write(Integer.toString(GlobalData.done_cycle));
-                    req.write(" ");
-                    req.write("\n");
-                    req.close();
-
+                    
+                    for(int l = 0; l < GlobalData.failStateCount; l++)
+                    {
+                        req = new BufferedWriter(new FileWriter("output/req" + GlobalData.grp_limit + "_f" + l + ".txt", true));
+                        double ratio = (double) GlobalData.Req_counter / (double) GlobalData.Reply_counter;
+                        req.write(Double.toString(GlobalData.alpha));
+                        req.write(" ");
+                        req.write(Integer.toString(5));
+                        req.write(" ");
+                        req.write(Double.toString(Round(avg_grp_size, 2)));
+                        req.write(" ");
+                        req.write(Integer.toString(grp_count));
+                        req.write(" ");
+                        req.write(Integer.toString(above_percentage[l]));
+                        req.write(" ");
+                        double above = (double) above_percentage75[l] / (double) grp_count;
+                        req.write(Double.toString(Round(above * 100, 2)));
+                        req.write(" ");
+                        above = (double) above_percentage[l] / (double) grp_count;
+                        req.write(Double.toString(Round(above * 100, 2)));
+                        req.write(" ");
+                        above = (double) above_percentage85[l] / (double) grp_count;
+                        req.write(Double.toString(Round(above * 100, 2)));
+                        req.write(" ");
+                        above = (double) above_percentage90[l] / (double) grp_count;
+                        req.write(Double.toString(Round(above * 100, 2)));
+                        req.write(" ");
+                        above = (double) above_percentage95[l] / (double) grp_count;
+                        req.write(Double.toString(Round(above * 100, 2)));
+                        req.write(" ");
+                        req.write(Long.toString(GlobalData.Req_counter));
+                        req.write(" ");
+                        req.write(Long.toString(GlobalData.Reply_counter));
+                        req.write(" ");
+                        req.write(Double.toString(Round(ratio, 2)));
+                        req.write(" ");
+                        req.write(Integer.toString(GlobalData.converged_cycle));
+                        req.write(" ");
+                        req.write(Double.toString(Round(avg_grp_1avail, 6)));
+                        req.write(" ");
+                        req.write(Double.toString(Round(min_grp_1avail, 6)));
+                        req.write(" ");
+                        req.write(Double.toString(Round(max_grp_1avail, 6)));
+                        req.write(" ");
+                        req.write(Double.toString(Round(avg_grp_2avail, 6)));
+                        req.write(" ");
+                        req.write(Double.toString(Round(min_grp_2avail, 6)));
+                        req.write(" ");
+                        req.write(Double.toString(Round(max_grp_2avail, 6)));
+                        req.write(" ");
+                        req.write(Integer.toString(GlobalData.converged95_cycle));
+                        req.write(" ");
+                        req.write(Integer.toString(GlobalData.converged99_cycle));
+                        req.write(" ");
+                        req.write(Integer.toString(GlobalData.done_cycle));
+                        req.write(" ");
+                        req.write("\n");
+                        req.close();
+                    }
                     //Finding out min, max, mean and median groups sizes after converging
                     ArrayList<Integer> groupSizes = new ArrayList<Integer>();
+                    int validGroupCount = 0;
+                    int groupSizeSum = 0;
 
-                    for (int i = 0; i < GlobalData.current_grpcount; i++)
+                    for (int i = 0; i < GlobalData.grouplist.size(); i++)
                     {
-                        groupSizes.add(GlobalData.grouplist.get(i).memberlist.size());
+                        if (GlobalData.grouplist.get(i).isvalid)
+                        {
+                            groupSizes.add(GlobalData.grouplist.get(i).grp_size);
+                            groupSizeSum += GlobalData.grouplist.get(i).grp_size;
+                            validGroupCount++;
+                        }
                     }
 
                     Collections.sort(groupSizes);
-                    int groupSizeSum = 0;
-                    for (Integer size : groupSizes)
-                    {
-                        groupSizeSum += size.intValue();
-                    }
 
-                    double meanGroupSize = (double) groupSizeSum / (double) groupSizes.size();
+                    double meanGroupSize = (double) groupSizeSum / (double) grp_count;
                     int medianGroupSize = groupSizes.get(groupSizes.size() / 2);
                     int minGroupSize = groupSizes.get(0);
                     int maxGroupSize = groupSizes.get(groupSizes.size() - 1);
@@ -707,13 +759,16 @@ public class PeerFunction implements Control
 
                     try
                     {
-                        String groupDataFile = "output\\groupSize_" + Network.size() + "_" + GlobalData.BETA+".txt";
+                        String groupDataFile = "output/groupSize_" + Network.size() + "_" + GlobalData.BETA + ".txt";
                         BufferedWriter sizeWriter = new BufferedWriter(new FileWriter(new File(groupDataFile)));
                         sizeWriter.write(meanGroupSize + " " + medianGroupSize + " " + minGroupSize + " " + maxGroupSize);
                         sizeWriter.newLine();
                         for (int i = minGroupSize; i <= maxGroupSize; i++)
                         {
-                            sizeWriter.write(i + " " + 100.0 * (double) bucket[i] / (double) groupSizes.size());
+                            if (bucket[i] > 0)
+                            {
+                                sizeWriter.write(i + " " + 100.0 * (double) bucket[i] / (double) groupSizes.size());
+                            }
                             sizeWriter.newLine();
                         }
                         sizeWriter.close();

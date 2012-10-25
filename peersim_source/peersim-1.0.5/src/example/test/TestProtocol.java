@@ -295,21 +295,7 @@ public class TestProtocol extends genericProtocol
         {
             members.add(self);
         }
-        /*
-         SingleNode r;
-         KnownNode v;
-         for (int i = (self.knownList.size()-1); i >= 0; i--) {
-         v= self.knownList.get(i);
-         r = (SingleNode)v.node;
-         v.slot= new double[GlobalData.slot_count];
-         System.arraycopy(r.slot, 0,v.slot, 0, r.slot.length);
-         v.grp_size=r.grp_size;
-         contribution= algo.contributionCalc(self,r);
-         v.contribution=contribution;
-         }
-         Collections.sort(self.knownList, new ConComparator());
-         *
-         */
+        
         self.knownList.clear();
         if (self.getID() == 12 && cycle == 2)
         {
@@ -335,29 +321,7 @@ public class TestProtocol extends genericProtocol
             complement_nodes = GlobalData.golayCode.SearchAPattern(comp_pattern, searchdistance);
         }
 
-        /*     if(Long.bitCount(self.pattern)<24 && complement_nodes.isEmpty())
-         {
-         searchdistance=GlobalData.maxHammingDistance*6;
-         complement_nodes=GlobalData.golayCode.SearchAPattern(comp_pattern, searchdistance);
-         }
-
-         //     PlexusNode px=new PlexusNode(self,self.pattern);
-         //     PlexusNode py = GlobalData.golayCode.GetComplementNode(px, complement_nodes);
-         //       System.out.println("Peer is: "+self.getID()+" "+Long.toBinaryString(self.pattern)+ " Best Complement is:"+py.node.getID()+" "+Long.toBinaryString(py.node.pattern)+" Xor "+Long.bitCount(self.pattern^py.node.pattern));
-         /*     if(self.getID()==72 || self.getID()==253 || self.getID()==866){
-         System.out.println("Peer is: "+self.getID()+"Grouped: "+self.grp_flag+" "+Get24BitsString(self.pattern)+ " "+"Searching :"+ Get24BitsString(GlobalData.golayCode.GetPartialComplementPattern(self.pattern)));
-         for (int i = 0; i < complement_nodes.size(); i++)
-         {
-         peer=complement_nodes.get(i).node;
-         System.out.println("Complement Peer "+peer.getID()+" XOR :"+ Get24BitsString(peer.pattern)+" XOR Bitcount: "+ " Xor bit count :"+Long.bitCount(self.pattern^peer.pattern));
-         }
-         }
-         *
-         *
-         */
-
-        //     for(int i=0;i<GlobalData.knownList.size();i++)
-        //   for (int i = 0; i < Network.size(); i++)
+        
         for (int i = 0; i < complement_nodes.size(); i++)
         {
             //      peer = (SingleNode)GlobalData.knownList.get(i).node;
@@ -483,13 +447,12 @@ public class TestProtocol extends genericProtocol
                 {
                     if (!incomingReplyQueue.isEmpty())
                     {
-                        boolean grouping_done = false;
                         Vector <SingleNode> leaderList = new Vector <SingleNode>();
                         Vector <SingleNode> groupedPeers = new Vector <SingleNode>();
-                        if(cycle == 4 && self.getID() == 239)
-                        {
-                            System.out.println();
-                        }
+                        SingleNode leader = null;
+                        boolean grouping_done = false;
+                        if(self.grp_flag) leader = GlobalData.grouplist.get(self.grp_id - 1).leader;
+                        
                         for (Iterator i = incomingReplyQueue.iterator(); i.hasNext(); i.remove())
                         {
                             genericMessage g = (genericMessage) i.next();
@@ -499,31 +462,29 @@ public class TestProtocol extends genericProtocol
                                 continue;
                             }
                             algo.mergeGroup(self, gm.src);
-                            SingleNode leader = GlobalData.grouplist.get(self.grp_id - 1).leader;
-                            leaderList.add(leader);
-                            leader.grouping_done = true;
+                            if(leader == null)
+                            {
+                                leader = GlobalData.grouplist.get(self.grp_id - 1).leader;
+                            }
                             if (leader.getID() != self.getID())
                             {
                                 groupFormMessage fm = new groupFormMessage(genericMessage.MSG_GROUP_FORM, self);
                                 genericProtocol gpeer = (genericProtocol) leader.getProtocol(protocolID);
                                 gpeer.sendMessage(fm, leader);
-                                //     System.out.println("Sending mes "+ fm.getId()+"To "+leader.getID()+" Type "+fm.toString());
                             }
                             isreplygot = true;
                             //sendReqDenile(protocolID, self, gm.src);
                             groupedPeers.add(gm.src);
                             deny_count = -1;
-                            for (int l = 0; l < GlobalData.BETA; l++)
-                            {
-                                wait_count[l] = 0; //wait_count = 0;
-                            }
-                            //break;
-                            //System.out.println("loop");
+                            grouping_done = true;
                         }
+                        
+                        if(leader != null) leader.grouping_done = grouping_done;
                         sendReqDenile(protocolID, self, groupedPeers);
                         
                         for (int i = 0; i < GlobalData.BETA; i++)
                         {
+                            wait_count[i] = 0; 
                             outReqQueue[i].clear();
                         }
                         //outReqQueue.clear();
@@ -592,10 +553,7 @@ public class TestProtocol extends genericProtocol
                     {
                         boolean all_denied = false;
                         boolean one_got = false;
-                        if(cycle == 5 && node.getID() == 13)
-                        {
-                            //System.out.println("DEBUG");
-                        }
+                        
                         
                         for (int i = (self.knownList.size() - 1); i >= 0; i--)
                         {
@@ -614,10 +572,6 @@ public class TestProtocol extends genericProtocol
                                     continue;
                             }
 
-                            /*if (peer.getID() == noreply)
-                             {
-                             continue;
-                             }*/
 
                             denyMessage dm = gself.containDenyMessage(peer);
                             if (dm != null)
@@ -703,10 +657,9 @@ public class TestProtocol extends genericProtocol
                         if (!peersToGroup.isEmpty())
                         {
                             Collections.sort(peersToGroup);
-                            //int f = getOnlinePeerCountOfNextSlots(self);
-                            int f = 0;
+                            int f = getOnlinePeerCountOfNextSlots(self);
+                            //int f = 0;
                             int nPeersToInvite = GlobalData.BETA - f;
-                            
                             
                             genericProtocol gp;
 

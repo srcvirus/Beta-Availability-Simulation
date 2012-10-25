@@ -2,3 +2,8 @@ nbproject/*
 output/*
 build.xml
 build/*
+dist/*
+*.md
+*.mf
+
+
