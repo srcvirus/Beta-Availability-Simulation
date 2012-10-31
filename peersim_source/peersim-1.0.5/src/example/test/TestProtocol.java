@@ -677,11 +677,14 @@ public class TestProtocol extends genericProtocol
                                     leader = GlobalData.grouplist.get(peerToInvite.grp_id - 1).leader;
                                 }
                                 gp = (genericProtocol) leader.getProtocol(protocolID);
-
+                                
+                                if(gp.betterReqExists(self.pattern, peerToInvite.pattern))
+                                    continue;
+                                
                                 self.knownList.get(peersToGroup.get(i).getKnownIndex()).sent_flag = true;
                                 reqMessage gotrm = gself.containReqMessage(leader);
                                 reqMessage fm = null;
-
+                                
                                 if (gotrm != null)
                                 {
                                     fm = new reqMessage(genericMessage.MSG_REQ, gotrm.dest, peersToGroup.get(i).getContribution(), self.slot, self.grp_size);

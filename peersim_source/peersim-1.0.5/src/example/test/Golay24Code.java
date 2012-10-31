@@ -480,7 +480,7 @@ public class Golay24Code
             
     }
     
-    PlexusNode GetComplementNode(PlexusNode rootNode,ArrayList<PlexusNode> nodeList)
+    public PlexusNode GetComplementNode(PlexusNode rootNode,ArrayList<PlexusNode> nodeList)
     {
         long maximumXorValue=0;
         PlexusNode mirrorNode=null;
@@ -506,7 +506,7 @@ public class Golay24Code
         System.out.println(Long.toBinaryString(k));
     }
 
-    long GetPartialComplementPattern(long pattern)
+    public long GetPartialComplementPattern(long pattern)
     {
         long partialComplemnt=0;
         int lastIndex;

@@ -229,6 +229,26 @@ public void setFailState(int failState) {
 
  }
 
+    public long getPattern()
+    {
+        return pattern;
+    }
+
+    public void setPattern(long pattern)
+    {
+        this.pattern = pattern;
+    }
+
+    public long getPattern_single()
+    {
+        return pattern_single;
+    }
+
+    public void setPattern_single(long pattern_single)
+    {
+        this.pattern_single = pattern_single;
+    }
+
 // -----------------------------------------------------------------
 
 public int getFailState() { return failstate; }

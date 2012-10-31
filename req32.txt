@@ -1,3 +1,13 @@
 0.0 5 9.0 107 68 73.83 63.55 57.94 47.66 37.38 32634 895 36.46 320 0.914703 0.658083 0.999868 0.685748 0.09 0.998294 200 240 400 
 0.0 5 9.0 107 58 61.68 54.21 43.93 37.38 26.17 32634 895 36.46 320 0.914703 0.658083 0.999868 0.685748 0.09 0.998294 200 240 400 
-file_id protocol_id avg_grp_size valid_grp_count grp_av_80percent_slots [percentage 75 - 95] reqs_count reply_count req/reply convergence_cycle_count 1_av[system_av min max] 2_av[same] converge_cycle_95percent_grp converge_cycle_99percent_grp cycle_after_which_grp_ends0.0 5 9.0 107 58 61.68 54.21 43.93 37.38 26.17 32634 895 36.46 320 0.914703 0.658083 0.999868 0.685748 0.09 0.998294 200 240 400 
+
+
+
+
+
+file_id protocol_id avg_grp_size valid_grp_count grp_av_80percent_slots [percentage 75 - 95] reqs_count reply_count req/reply convergence_cycle_count 1_av[system_av min max] 2_av[same] converge_cycle_95percent_grp converge_cycle_99percent_grp cycle_after_which_grp_ends
+
+
+
+
+0.0 5 9.0 107 58 61.68 54.21 43.93 37.38 26.17 32634 895 36.46 320 0.914703 0.658083 0.999868 0.685748 0.09 0.998294 200 240 400 

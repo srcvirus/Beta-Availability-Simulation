@@ -245,6 +245,28 @@ public abstract class genericProtocol implements CDProtocol
         }
         return null;
     }
+    
+    public boolean betterReqExists(long sPattern, long candidatePattern)
+    {
+        Vector queue = incomingReqQueue;
+        
+        Golay24CodeWord sCodeWord = new Golay24CodeWord(sPattern);
+        Golay24CodeWord candidateCodeWord = new Golay24CodeWord(candidatePattern);
+        Golay24CodeWord complementCodeWord = new Golay24CodeWord(GlobalData.golayCode.GetPartialComplementPattern(candidatePattern));
+        
+        int sHammingDist = complementCodeWord.GetHammingDistance(sPattern);
+        
+        for(Iterator i = queue.iterator(); i.hasNext(); )
+        {
+            reqMessage rm = (reqMessage)i.next();
+            int rHammingDist = complementCodeWord.GetHammingDistance(rm.getSource().getPattern());
+            
+            if(sHammingDist <= rHammingDist)
+                return true;
+        }
+        
+        return false;
+    }
 
     public abstract boolean initiateQuery(genericQuery gq);
 

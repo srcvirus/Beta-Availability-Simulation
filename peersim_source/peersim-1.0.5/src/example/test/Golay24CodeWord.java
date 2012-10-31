@@ -16,7 +16,7 @@ public class Golay24CodeWord
     int numberOfBitOne;
     ArrayList<PlexusNode> bucket;
     
-    Golay24CodeWord(long aCodeWord)
+    public Golay24CodeWord(long aCodeWord)
     {
         codeWord=aCodeWord;
         numberOfBitOne=Long.bitCount(aCodeWord);
@@ -57,14 +57,14 @@ public class Golay24CodeWord
         return false;
     }
     
-    int GetHammingDistance(long newPattern)
+    public int GetHammingDistance(long newPattern)
     {
         int distance=0;
         long bucketCodeWord=codeWord;
         return GetHammingDistance(newPattern,bucketCodeWord);
     }
     
-    int GetHammingDistance(long pattern1,long pattern2)
+    public int GetHammingDistance(long pattern1,long pattern2)
     {
         int distance=0;
         for(int i=0;i<24;i++)
