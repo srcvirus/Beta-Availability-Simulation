@@ -37,6 +37,7 @@ package example.test;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Vector;
 import peersim.cdsim.CDState;
 import peersim.config.*;
 import peersim.core.*;
@@ -167,7 +168,7 @@ public class PeerFunction implements Control
             {
                 System.out.println();
             }
-
+            int L = Configuration.getInt("simulation.uptime");
             int slot_count = GlobalData.slot_count;
             double all_sum[] = new double[slot_count];
             int never_alive = 0;
@@ -262,13 +263,13 @@ public class PeerFunction implements Control
                             data.write(" ");
                             data.write(Integer.toString(1));
                             data.write("\n");
-                            data.close();
+                            //data.close();
 
                             data_2.write(Double.toString(Round(0, 6)));
                             data_2.write(" ");
                             data_2.write(Integer.toString(1));
                             data_2.write("\n");
-                            data_2.close();
+                            //data_2.close();
                         }
                     }
                 }
@@ -309,12 +310,13 @@ public class PeerFunction implements Control
             single_sum = single_sum / (slot_count * ungrp_node_count);
             grp_count = 0;
             sum_grp_size = 0;
-
+            Vector <Double> perGrpAv = new Vector <Double>();
             try
             {
                 data = new BufferedWriter(new FileWriter("output/fopt5_1ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
                 data_2 = new BufferedWriter(new FileWriter("output/fopt5_2ava_" + GlobalData.grp_limit + "_n" + len + "_c" + max_cycles + "_a" + GlobalData.alpha + ".txt", true));
-
+                
+                
                 for (int k = 0; k < GlobalData.grouplist.size(); k++)
                 {
                     if (GlobalData.grouplist.get(k).isvalid)
@@ -375,6 +377,8 @@ public class PeerFunction implements Control
                         if (cycle == max_cycles - 1)
                         {
                             per_grp_1avail = grp_sum / slot_count;
+                            perGrpAv.add(new Double(per_grp_1avail));
+                            
                             avg_grp_1avail += per_grp_1avail;
                             if (per_grp_1avail > max_grp_1avail)
                             {
@@ -475,21 +479,26 @@ public class PeerFunction implements Control
                     ;
                 }
             }
-
+            
+            double confidenceInterval95grpAv = 0.0;
+            double stddev = 0.0;
             if (grp_count > 0)
             {
                 avg_grp_1avail /= grp_count;
                 avg_grp_2avail /= grp_count;
                 avg_grp_size = sum_grp_size / grp_count;
-                int intz = (int) sum_grp_size / grp_count;
-                float fraction = avg_grp_size - intz;
-                if (fraction >= 0.5)
+                avg_grp_size = (int)Math.floor(avg_grp_size + 0.5);
+                
+                for(int l = 0; l < perGrpAv.size(); l++)
                 {
-                    avg_grp_size = intz + 1;
-                } else
-                {
-                    avg_grp_size = intz;
+                    double diff = avg_grp_1avail - perGrpAv.get(l).doubleValue();
+                    stddev += (diff * diff);
                 }
+                
+                stddev /= (double)grp_count;
+                stddev = Math.sqrt(stddev);
+                
+                confidenceInterval95grpAv = 1.96 * (stddev / Math.sqrt(grp_count));
             }
             //   grp_sum=grp_sum/(slot_count*grp_count);
             all_grp_count = ungrp_node_count + grp_count;
@@ -634,7 +643,7 @@ public class PeerFunction implements Control
                     double maxFail = Configuration.getDouble("simulation.maxfailure");
                     double failStep = Configuration.getDouble("simulation.failstep");
                     double fail = minFail;
-                    up = new BufferedWriter(new FileWriter(new File("output/up_percentage_" + GlobalData.grp_limit + "_" + GlobalData.BETA + "_" + Network.size() + ".txt"), true));
+                    up = new BufferedWriter(new FileWriter(new File("output/up_percentage_" + "_" + Network.size() + "_" + GlobalData.BETA + "_" + L + ".txt"), true));
                     up.write(Double.toString(GlobalData.alpha));
                     up.write(" ");
                     up.write(Integer.toString(5));
@@ -679,10 +688,11 @@ public class PeerFunction implements Control
                         down.write("\n");
                     }
                     down.close();
-
+                    
                     for (int l = 0; l < GlobalData.failStateCount; l++)
                     {
-                        req = new BufferedWriter(new FileWriter("output/req" + GlobalData.grp_limit + "_f" + l + ".txt", true));
+                        String reqFileName = "output/req_fail_" + l + "_" + Network.size() + "_" + GlobalData.BETA + "_" + L + ".txt";
+                        req = new BufferedWriter(new FileWriter(reqFileName, true));
                         double ratio = (double) GlobalData.Req_counter / (double) GlobalData.Reply_counter;
                         req.write(Double.toString(GlobalData.alpha));
                         req.write(" ");
@@ -718,6 +728,10 @@ public class PeerFunction implements Control
                         req.write(Integer.toString(GlobalData.converged_cycle));
                         req.write(" ");
                         req.write(Double.toString(Round(avg_grp_1avail, 6)));
+                        req.write(" ");
+                        req.write(Double.toString(Round(stddev, 6)));
+                        req.write(" ");
+                        req.write(Double.toString(Round(confidenceInterval95grpAv, 6)));
                         req.write(" ");
                         req.write(Double.toString(Round(min_grp_1avail, 6)));
                         req.write(" ");
@@ -756,9 +770,21 @@ public class PeerFunction implements Control
                     Collections.sort(groupSizes);
 
                     double meanGroupSize = (double) groupSizeSum / (double) grp_count;
+                    double stddevGrpSize = 0.0;
+                    double confidenceInterval95GrpSize = 0.0;
+                    for(int i = 0; i < groupSizes.size(); i++)
+                    {
+                        double diff = meanGroupSize - (double)groupSizes.get(i);
+                        stddevGrpSize += (diff * diff);
+                    }
+                    stddevGrpSize /= (double) grp_count;
+                    stddevGrpSize = Math.sqrt(stddevGrpSize);
+                    confidenceInterval95GrpSize = 1.96 * (stddevGrpSize / Math.sqrt(grp_count));
+                    
                     int medianGroupSize = groupSizes.get(groupSizes.size() / 2);
                     int minGroupSize = groupSizes.get(0);
                     int maxGroupSize = groupSizes.get(groupSizes.size() - 1);
+                    
                     int[] bucket = new int[maxGroupSize + 1];
                     for (int i = 0; i <= maxGroupSize; i++)
                     {
@@ -771,17 +797,17 @@ public class PeerFunction implements Control
 
                     try
                     {
-                        String groupDataFile = "output/groupSize_" + Network.size() + "_" + GlobalData.BETA + ".txt";
+                        String groupDataFile = "output/groupSize_" + Network.size() + "_" + GlobalData.BETA + "_"+ L + ".txt";
                         BufferedWriter sizeWriter = new BufferedWriter(new FileWriter(new File(groupDataFile)));
-                        sizeWriter.write(meanGroupSize + " " + medianGroupSize + " " + minGroupSize + " " + maxGroupSize);
+                        sizeWriter.write(meanGroupSize + " " + medianGroupSize + " " + minGroupSize + " " + maxGroupSize + " " + confidenceInterval95GrpSize + " " + stddevGrpSize);
                         sizeWriter.newLine();
                         for (int i = minGroupSize; i <= maxGroupSize; i++)
                         {
                             if (bucket[i] > 0)
                             {
                                 sizeWriter.write(i + " " + 100.0 * (double) bucket[i] / (double) groupSizes.size());
+                                sizeWriter.newLine();
                             }
-                            sizeWriter.newLine();
                         }
                         sizeWriter.close();
                     } catch (Exception ex)

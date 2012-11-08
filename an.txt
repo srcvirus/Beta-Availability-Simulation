@@ -3,12 +3,12 @@ random.seed 1234567890
 simulation.cycles 1201
 run.cycles 960
 simulation.shuffle
-network.size 4000
+network.size 1000
 simulation.groupsize 32
 simulation.percentage 80
 simulation.slots	 24
-simulation.input	 1.5
-simulation.uptime 6
+simulation.input	 0.5
+simulation.uptime 8
 simulation.beta 1
 simulation.minfailure	0.0
 simulation.maxfailure	50.0
